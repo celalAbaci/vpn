@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SuperVPN_Project</string>
+    <string name="premium">Premium</string>
+    <string name="server_selection">Sunucu Seçimi</string>
+    <string name="language_selection">Dil Seçimi</string>
+    <string name="help">Yardım</string>
+    <string name="menu">Menü</string>
+    <string name="browser">Tarayıcı</string>
+    <string name="location_selection">Konum Seçimi</string>
+</resources>
