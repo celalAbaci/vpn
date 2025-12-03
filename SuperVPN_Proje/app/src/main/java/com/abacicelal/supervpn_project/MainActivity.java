@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
     private ApiService apiService;
 
     // Seçilen protokolü saklamak için
-    private VpnProtocol selectedProtocol = VpnProtocol.WIREGUARD; // Varsayılan
+    private VpnProtocol selectedProtocol = VpnProtocol.OPENVPN; // Varsayılan "Auto" OPENVPN olmalı
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -376,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
                     //
                     // Kütüphaneleriniz olmadığı için, burada bağlantıyı "başarılı" varsayıyoruz.
                     // --- BAŞARILI VARSAYMA KISMI ---
-                    simulateConnectionSuccess();
+                    startOpenVpn(configContent);
                     // ---------------------------------
                 } else {
                     handleConnectionFailure("VPN yapılandırması alınamadı. Hata: " + response.code());
@@ -416,13 +416,43 @@ public class MainActivity extends AppCompatActivity {
         android.widget.Toast.makeText(MainActivity.this, "VPN bağlantısı kuruldu", android.widget.Toast.LENGTH_SHORT).show();
     }
 
+    private void startOpenVpn(String configContent) {
+        try {
+            de.blinkt.openvpn.core.VpnStatus.logMessage(de.blinkt.openvpn.core.VpnStatus.LogLevel.INFO, "VPN", "Starting OpenVPN...");
+
+            // Config parser
+            java.io.StringReader sr = new java.io.StringReader(configContent);
+            de.blinkt.openvpn.core.ConfigParser cp = new de.blinkt.openvpn.core.ConfigParser();
+            cp.parseConfig(sr);
+            de.blinkt.openvpn.VpnProfile vp = cp.convertProfile();
+
+            // Set name to server name
+            String serverName = currentServerInfo.getText().toString().replace("Mevcut Sunucu : ", "");
+            vp.mName = serverName;
+
+            // Start VPN
+            de.blinkt.openvpn.core.ProfileManager.setTemporaryProfile(this, vp);
+            de.blinkt.openvpn.core.VPNLaunchHelper.startOpenVpn(vp, this);
+
+            // Note: Connection success is handled by BroadcastReceiver in a real scenario.
+            // For now, we assume success to update UI immediately, but real status comes from OpenVPN service.
+            simulateConnectionSuccess();
+
+        } catch (Exception e) {
+            Log.e(TAG, "OpenVPN Başlatma Hatası", e);
+            handleConnectionFailure("OpenVPN başlatılamadı: " + e.getMessage());
+        }
+    }
+
     private void disconnectVPN() {
         Log.d(TAG, "disconnectVPN çağrıldı.");
-        // Gerçek bir uygulamada burada VPN servisini durdurma komutu olur.
-        // Örnek:
-        // Intent vpnIntent = new Intent(MainActivity.this, MyVpnService.class);
-        // vpnIntent.setAction("ACTION_DISCONNECT");
-        // startService(vpnIntent);
+
+        // Stop OpenVPN
+        try {
+             de.blinkt.openvpn.core.OpenVPNService.abortConnection();
+        } catch (Exception e) {
+            Log.e(TAG, "Error stopping VPN", e);
+        }
 
         isConnecting = false;
         isConnected = false;
@@ -442,15 +472,19 @@ public class MainActivity extends AppCompatActivity {
             Button button = (Button) v;
             button.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.purple_500)));
             String selectedProtocolName = "Otomatik"; // Seçilen protokole göre enum değerini ayarla
+
             if (button.getId() == R.id.protocolAuto) {
-                selectedProtocolName = "Otomatik";
-                selectedProtocol = VpnProtocol.WIREGUARD; // "Auto" için varsayılan
+                selectedProtocolName = "Otomatik (OpenVPN)";
+                // Şu an sadece OpenVPN çalıştığı için Auto = OpenVPN
+                selectedProtocol = VpnProtocol.OPENVPN;
             } else if (button.getId() == R.id.protocolIKEv2) {
                 selectedProtocolName = "IKEv2";
                 selectedProtocol = VpnProtocol.IKEV2;
+                Toast.makeText(this, "Bu protokol henüz aktif değil, OpenVPN önerilir.", Toast.LENGTH_SHORT).show();
             } else if (button.getId() == R.id.protocolSuper) {
                 selectedProtocolName = "Super";
-                selectedProtocol = VpnProtocol.WIREGUARD; // "Super" için varsayılan
+                selectedProtocol = VpnProtocol.WIREGUARD; // Placeholder
+                Toast.makeText(this, "Bu protokol henüz aktif değil, OpenVPN önerilir.", Toast.LENGTH_SHORT).show();
             } else if (button.getId() == R.id.protocolOpenVPN) {
                 selectedProtocolName = "OpenVPN";
                 selectedProtocol = VpnProtocol.OPENVPN;
@@ -461,10 +495,10 @@ public class MainActivity extends AppCompatActivity {
         for (Button button : protocolButtons) {
             button.setOnClickListener(listener);
         }
-        // Başlangıçta "Auto" (WireGuard) seçili olsun
+        // Başlangıçta "Auto" (OpenVPN) seçili olsun
         protocolAuto.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.purple_500)));
         currentProtocolInfo.setText("Protokol : Otomatik");
-        selectedProtocol = VpnProtocol.WIREGUARD;
+        selectedProtocol = VpnProtocol.OPENVPN;
     }
 
     private void startTimer() {

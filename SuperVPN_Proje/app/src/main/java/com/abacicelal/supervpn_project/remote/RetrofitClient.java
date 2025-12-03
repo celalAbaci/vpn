@@ -19,7 +19,7 @@ public class RetrofitClient {
 
 //    https://www.dataguardvpn.com/
 // Domain adresini buraya yazıyoruz
-private static final String BASE_URL = "http://api.dataguardvpn.com:8080/";
+private static final String BASE_URL = "http://188.166.31.42:8080/";
 
     private static Retrofit retrofit = null;
     private static ApiService apiService = null;
