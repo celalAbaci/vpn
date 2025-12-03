@@ -36,6 +36,14 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
         UserDevice device = userDeviceRepository.findById(request.getDeviceId())
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Cihaz bulunamadı"));
 
+        // Önce mevcut bir konfigürasyon var mı kontrol et
+        java.util.Optional<UserVpnConfig> existingConfig = userVpnConfigRepository.findByUserIdAndServerIdAndProtocol(
+                currentUser.getId(), entryServer.getId(), request.getProtocol());
+
+        if (existingConfig.isPresent()) {
+            return new VpnConfigResponse(existingConfig.get().getConfigContent(), request.getProtocol().name(), entryServer.getServerName());
+        }
+
         String configContent = "";
 
         switch (request.getProtocol()) {

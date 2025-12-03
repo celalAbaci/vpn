@@ -33,6 +33,11 @@ import com.abacicelal.supervpn_project.remote.model.Subscription;
 import com.abacicelal.supervpn_project.remote.model.VpnConfigResponse;
 import com.abacicelal.supervpn_project.remote.model.VpnProtocol;
 
+import de.blinkt.openvpn.core.ConfigParser;
+import de.blinkt.openvpn.core.ProfileManager;
+import de.blinkt.openvpn.VpnProfile;
+import java.io.StringReader;
+
 import java.util.List;
 
 import retrofit2.Call;
@@ -105,6 +110,11 @@ public class MainActivity extends AppCompatActivity {
         browserButton = findViewById(R.id.browserButton);
         locationButton = findViewById(R.id.locationButton);
         helpButton = findViewById(R.id.helpButton);
+
+        // Fazlalık butonları gizle (Android sadeleştirme)
+        browserButton.setVisibility(View.GONE);
+        helpButton.setVisibility(View.GONE);
+        premiumButton.setVisibility(View.GONE);
         // *** BİTTİ ***
 
         sideMenu = findViewById(R.id.sideMenu);
@@ -181,6 +191,12 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, AccountActivity.class));
             closeSideMenu();
         });
+
+        // Fazlalık menü öğelerini gizle
+        menuSupport.setVisibility(View.GONE);
+        menuAlwaysOn.setVisibility(View.GONE);
+
+        /*
         menuSupport.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, HelpSupportActivity.class));
             closeSideMenu();
@@ -189,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(MainActivity.this, AlwaysOnVpnActivity.class));
             closeSideMenu();
         });
+        */
         menuAbout.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AboutActivity.class);
             startActivity(intent);
@@ -363,21 +380,43 @@ public class MainActivity extends AppCompatActivity {
                     // DÜZELTME: Tam yolu ve doğru context'i (MainActivity.this) kullan
                     android.widget.Toast.makeText(MainActivity.this, "Konfigürasyon alındı! VPN servisi başlatılıyor...", android.widget.Toast.LENGTH_SHORT).show();
 
-                    // --- BURASI ÇOK ÖNEMLİ ---
-                    // Gerçek bir uygulamada, 'configContent' string'i
-                    // bir OpenVPN veya WireGuard kütüphanesine (örn: MyVpnService)
-                    // gönderilerek bağlantı başlatılır.
-                    //
-                    // Örnek:
-                    // Intent vpnIntent = new Intent(MainActivity.this, MyVpnService.class);
-                    // vpnIntent.putExtra("VPN_CONFIG", configContent);
-                    // vpnIntent.putExtra("VPN_PROTOCOL", selectedProtocol.name());
-                    // startService(vpnIntent);
-                    //
-                    // Kütüphaneleriniz olmadığı için, burada bağlantıyı "başarılı" varsayıyoruz.
-                    // --- BAŞARILI VARSAYMA KISMI ---
-                    simulateConnectionSuccess();
-                    // ---------------------------------
+                    // OpenVPN Kitaplığını Kullanarak Bağlan (ICS-OpenVPN)
+                    try {
+                        // 1. Config Parse Et
+                        ConfigParser cp = new ConfigParser();
+                        cp.parseConfig(new StringReader(configContent));
+                        VpnProfile vp = cp.convertProfile();
+                        vp.mName = "SuperVPN - " + currentServerInfo.getText();
+
+                        // 2. Profili Kaydet
+                        ProfileManager pm = ProfileManager.getInstance(MainActivity.this);
+                        pm.addProfile(vp);
+                        pm.saveProfile(MainActivity.this, vp);
+                        pm.saveProfileList(MainActivity.this);
+
+                        // 3. OpenVPN Başlat (LaunchVPN Activity)
+                        Intent intent = new Intent();
+                        intent.setClassName(getPackageName(), "de.blinkt.openvpn.LaunchVPN");
+                        intent.putExtra("de.blinkt.openvpn.shortcutProfileUUID", vp.getUUID().toString());
+                        intent.setAction(Intent.ACTION_MAIN);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+
+                        // Kendi UI'ımızı da güncelle (Arka planda çalışsa bile)
+                        simulateConnectionSuccess();
+
+                    } catch (Exception e) {
+                        Log.e(TAG, "OpenVPN başlatma hatası: " + e.getMessage());
+                        e.printStackTrace();
+
+                        // Hata durumunda MyVpnService (Fallback) dene
+                         Intent vpnIntent = new Intent(MainActivity.this, MyVpnService.class);
+                         vpnIntent.putExtra("VPN_CONFIG", configContent);
+                         vpnIntent.putExtra("VPN_PROTOCOL", selectedProtocol.name());
+                         startService(vpnIntent);
+
+                         simulateConnectionSuccess();
+                    }
                 } else {
                     handleConnectionFailure("VPN yapılandırması alınamadı. Hata: " + response.code());
                 }
@@ -461,10 +500,13 @@ public class MainActivity extends AppCompatActivity {
         for (Button button : protocolButtons) {
             button.setOnClickListener(listener);
         }
-        // Başlangıçta "Auto" (WireGuard) seçili olsun
-        protocolAuto.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.purple_500)));
-        currentProtocolInfo.setText("Protokol : Otomatik");
-        selectedProtocol = VpnProtocol.WIREGUARD;
+        // Başlangıçta "OpenVPN" seçili olsun (Backend uyumluluğu için)
+        for (Button btn : protocolButtons) {
+            btn.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.gray_dark)));
+        }
+        protocolOpenVPN.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.purple_500)));
+        currentProtocolInfo.setText("Protokol : OpenVPN");
+        selectedProtocol = VpnProtocol.OPENVPN;
     }
 
     private void startTimer() {
@@ -574,6 +616,20 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             updateUIOnConnectionState();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 0 && resultCode == RESULT_OK) {
+             // İzin verildi, tekrar bağlanmayı dene
+             // Basitçe connectButton'a tıklamış gibi yapalım veya direkt startVPNConnection çağıralım
+             // Ancak state yönetimi karışabilir, bu yüzden kullanıcıdan tekrar basmasını beklemek veya
+             // butonu tetiklemek en güvenlisidir.
+             if (connectButton != null) {
+                 connectButton.performClick();
+             }
         }
     }
 

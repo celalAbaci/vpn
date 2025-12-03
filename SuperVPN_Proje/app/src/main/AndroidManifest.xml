@@ -52,8 +52,7 @@
         <service
             android:name=".MyVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            android:exported="true"
-            android:isolatedProcess="true">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
