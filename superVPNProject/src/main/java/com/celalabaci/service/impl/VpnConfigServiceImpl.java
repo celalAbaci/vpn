@@ -33,6 +33,12 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
         VpnServer entryServer = vpnServerRepository.findById(request.getEntryServerId())
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Sunucu bulunamadı"));
 
+        // Check for existing configuration first
+        var existingConfig = userVpnConfigRepository.findByUserIdAndServerIdAndProtocol(currentUser.getId(), entryServer.getId(), request.getProtocol());
+        if (existingConfig.isPresent()) {
+            return new VpnConfigResponse(existingConfig.get().getConfigContent(), request.getProtocol().name(), entryServer.getServerName());
+        }
+
         UserDevice device = userDeviceRepository.findById(request.getDeviceId())
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Cihaz bulunamadı"));
 

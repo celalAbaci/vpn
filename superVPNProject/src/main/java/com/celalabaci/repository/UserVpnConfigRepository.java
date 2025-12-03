@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface UserVpnConfigRepository extends JpaRepository<UserVpnConfig, Long> {
     List<UserVpnConfig> findByUserId(Long userId);
+
+    java.util.Optional<UserVpnConfig> findByUserIdAndServerIdAndProtocol(Long userId, Long serverId, com.celalabaci.dto.config.VpnProtocol protocol);
 }

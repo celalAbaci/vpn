@@ -48,16 +48,25 @@
         <activity android:name=".RegisterActivity" />
         <activity android:name=".AlwaysOnVpnActivity" />
 
-        <!-- VPN Servis -->
+        <!-- VPN Servis (ICS-OpenVPN için gerekli) -->
         <service
-            android:name=".MyVpnService"
+            android:name="de.blinkt.openvpn.core.OpenVPNService"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            android:exported="true"
-            android:isolatedProcess="true">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
         </service>
+
+        <!-- ICS-OpenVPN Activities -->
+         <activity
+            android:name="de.blinkt.openvpn.LaunchVPN"
+            android:label="@string/vpn_launch_title"
+            android:excludeFromRecents="true"
+            android:theme="@style/blinkt.translucent"
+            android:taskAffinity=".LaunchVPN"
+            android:autoRemoveFromRecents="true">
+        </activity>
 
     </application>
 </manifest>
