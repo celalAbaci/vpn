@@ -20,9 +20,9 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <lombok.version>1.18.30</lombok.version>
         <google-api-client.version>2.0.0</google-api-client.version>
-    <google-oauth-client.version>1.34.1</google-oauth-client.version>
-    <google-api-services-androidpublisher.version>v3-rev20230821-2.0.0</google-api-services-androidpublisher.version>
-</properties>
+        <google-oauth-client.version>1.34.1</google-oauth-client.version>
+        <google-api-services-androidpublisher.version>v3-rev20230821-2.0.0</google-api-services-androidpublisher.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -90,18 +90,12 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!--
-          YENİ EKLENEN BAĞIMLILIK: Prometheus
-          Bu bağımlılık, Micrometer'in topladığı metrikleri
-          Prometheus'un okuyabileceği formatta /actuator/prometheus endpoint'inde
-          yayımlamasını sağlar.
-        -->
+        <!-- Prometheus -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
             <scope>runtime</scope>
         </dependency>
-
 
         <!-- Dev & Test -->
         <dependency>
@@ -123,10 +117,8 @@
         <dependency>
             <groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
             <artifactId>bucket4j-spring-boot-starter</artifactId>
-            <version>0.10.0</version> <!-- veya daha güncel bir sürüm -->
+            <version>0.10.0</version>
         </dependency>
-
-
 
         <dependency>
             <groupId>com.google.api-client</groupId>
@@ -144,14 +136,14 @@
             <version>${google-api-services-androidpublisher.version}</version>
         </dependency>
 
-
-        <!-- Mevcut dependencylerin arasına ekleyin -->
+        <!-- SSH Client (Updated) -->
         <dependency>
-            <groupId>com.jcraft</groupId>
+            <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
+            <version>0.2.16</version>
         </dependency>
-        <!-- HTTP İstekleri için (Spring Boot içinde genellikle gelir ama yoksa ekleyin) -->
+
+        <!-- HTTP Client -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
@@ -192,7 +184,6 @@
                             <artifactId>lombok</artifactId>
                             <version>${lombok.version}</version>
                         </path>
-                        <!-- Bu satır, Lombok ve MapStruct'ın birlikte çalışmasını sağlar -->
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-mapstruct-binding</artifactId>
