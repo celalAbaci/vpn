@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">SuperVPN</string>
+    <string name="connect">Verbinden</string>
+    <string name="disconnect">Trennen</string>
+    <string name="connecting">Verbindet...</string>
+    <string name="connected">Verbunden</string>
+    <string name="no_connection">Keine Verbindung</string>
+    <string name="tap_to_connect">Zum Verbinden tippen</string>
+    <string name="current_server">Aktueller Server : %s</string>
+    <string name="protocol">Protokoll : %s</string>
+    <string name="server_select_title">Server Auswählen</string>
+    <string name="account_title">Konto</string>
+    <string name="settings_title">Einstellungen</string>
+    <string name="vpn_launch_title">Verbinde mit VPN...</string>
+    <string name="browser_error">Browser konnte nicht geöffnet werden.</string>
+    <string name="login_needed">Bitte zuerst einloggen.</string>
+    <string name="device_error">Geräteinformationen konnten nicht abgerufen werden.</string>
+    <string name="subscription_error">Kein aktives Abonnement gefunden.</string>
+    <string name="ikev2_not_supported">IKEv2 erfordert Android 11+.</string>
+    <string name="v2ray_copied">V2Ray-Konfiguration kopiert! v2rayNG wird geöffnet...</string>
+    <string name="v2ray_not_installed">v2rayNG App ist nicht installiert.</string>
+    <string name="super_copied">Super-Konfiguration kopiert!</string>
+    <string name="logout">Abmelden</string>
+    <string name="my_account">Mein Konto</string>
+    <string name="loading">Laden...</string>
+    <string name="subscription_status">Abo-Status: %s</string>
+    <string name="active_premium">Aktiv Premium</string>
+    <string name="free_passive">Kostenlos / Passiv</string>
+</resources>

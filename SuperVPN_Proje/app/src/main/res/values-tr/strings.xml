@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">SuperVPN</string>
+    <string name="connect">Bağlan</string>
+    <string name="disconnect">Bağlantıyı Kes</string>
+    <string name="connecting">Bağlanıyor...</string>
+    <string name="connected">Bağlandı</string>
+    <string name="no_connection">Bağlantı Yok</string>
+    <string name="tap_to_connect">Bağlanmak için dokunun</string>
+    <string name="current_server">Mevcut Sunucu : %s</string>
+    <string name="protocol">Protokol : %s</string>
+    <string name="server_select_title">Sunucu Seçin</string>
+    <string name="account_title">Hesap</string>
+    <string name="settings_title">Ayarlar</string>
+    <string name="vpn_launch_title">VPN\'e Bağlanılıyor...</string>
+    <string name="browser_error">Tarayıcı açılamadı.</string>
+    <string name="login_needed">Lütfen önce giriş yapın.</string>
+    <string name="device_error">Cihaz bilgisi alınamadı.</string>
+    <string name="subscription_error">Aktif abonelik bulunamadı.</string>
+    <string name="ikev2_not_supported">IKEv2 için Android 11+ gereklidir.</string>
+    <string name="v2ray_copied">V2Ray konfigürasyonu kopyalandı! v2rayNG açılıyor...</string>
+    <string name="v2ray_not_installed">v2rayNG uygulaması yüklü değil.</string>
+    <string name="super_copied">Super konfigürasyonu kopyalandı!</string>
+    <string name="logout">Çıkış Yap</string>
+    <string name="my_account">Hesabım</string>
+    <string name="loading">Yükleniyor...</string>
+    <string name="subscription_status">Abonelik Durumu: %s</string>
+    <string name="active_premium">Aktif Premium</string>
+    <string name="free_passive">Ücretsiz / Pasif</string>
+</resources>

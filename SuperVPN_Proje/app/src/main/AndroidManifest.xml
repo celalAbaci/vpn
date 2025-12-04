@@ -1,16 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.abacicelal.supervpn_project">
 
-    <uses-sdk
-        android:minSdkVersion="21"
-        android:targetSdkVersion="33" />
-
-    <!-- Temel izinler -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- Gelişmiş özellikler için (opsiyonel) -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
 
     <application
         android:allowBackup="true"
@@ -22,7 +17,6 @@
         android:theme="@style/Theme.SuperVPN_Project"
         android:usesCleartextTraffic="true">
 
-        <!-- Splash Activity -->
         <activity
             android:name=".SplashActivity"
             android:exported="true">
@@ -32,7 +26,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Diğer Aktiviteler -->
         <activity android:name=".MainActivity" />
         <activity android:name=".ServerSelectionActivity" />
         <activity android:name=".LanguageSelectionActivity" />
@@ -41,14 +34,12 @@
         <activity android:name=".AboutActivity" />
         <activity android:name=".UserProfileActivity" />
         <activity android:name=".SettingsActivity" />
-
-        <!-- YENİ EKLENEN AKTİVİTELER -->
         <activity android:name=".AccountActivity" />
         <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity" />
         <activity android:name=".AlwaysOnVpnActivity" />
 
-        <!-- VPN Servis (ICS-OpenVPN için gerekli) -->
+        <!-- OpenVPN Service from Library -->
         <service
             android:name="de.blinkt.openvpn.core.OpenVPNService"
             android:permission="android.permission.BIND_VPN_SERVICE"
@@ -58,15 +49,11 @@
             </intent-filter>
         </service>
 
-        <!-- ICS-OpenVPN Activities -->
-         <activity
-            android:name="de.blinkt.openvpn.LaunchVPN"
-            android:label="@string/vpn_launch_title"
-            android:excludeFromRecents="true"
-            android:theme="@style/blinkt.translucent"
-            android:taskAffinity=".LaunchVPN"
-            android:autoRemoveFromRecents="true">
-        </activity>
+        <!-- Necessary activities for the library if it exposes them,
+             but kaikelmax usually uses its own or standard ones.
+             If the library re-uses de.blinkt namespace (which it often does as a fork),
+             we keep the service declaration. kaikelmax library uses de.blinkt.openvpn.core.OpenVPNService internally.
+        -->
 
     </application>
 </manifest>

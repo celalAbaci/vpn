@@ -1,10 +1,29 @@
 <resources>
-    <string name="app_name">SuperVPN_Project</string>
-    <string name="premium">Premium</string>
-    <string name="server_selection">Sunucu Seçimi</string>
-    <string name="language_selection">Dil Seçimi</string>
-    <string name="help">Yardım</string>
-    <string name="menu">Menü</string>
-    <string name="browser">Tarayıcı</string>
-    <string name="location_selection">Konum Seçimi</string>
+    <string name="app_name">SuperVPN</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="connecting">Connecting...</string>
+    <string name="connected">Connected</string>
+    <string name="no_connection">No Connection</string>
+    <string name="tap_to_connect">Tap to connect</string>
+    <string name="current_server">Current Server : %s</string>
+    <string name="protocol">Protocol : %s</string>
+    <string name="server_select_title">Select Server</string>
+    <string name="account_title">Account</string>
+    <string name="settings_title">Settings</string>
+    <string name="vpn_launch_title">Connecting to VPN...</string>
+    <string name="browser_error">Could not open browser.</string>
+    <string name="login_needed">Please login first.</string>
+    <string name="device_error">Failed to get device info.</string>
+    <string name="subscription_error">Active subscription not found.</string>
+    <string name="ikev2_not_supported">IKEv2 requires Android 11+.</string>
+    <string name="v2ray_copied">V2Ray config copied! Opening v2rayNG...</string>
+    <string name="v2ray_not_installed">v2rayNG app not installed.</string>
+    <string name="super_copied">Super config copied!</string>
+    <string name="logout">Logout</string>
+    <string name="my_account">My Account</string>
+    <string name="loading">Loading...</string>
+    <string name="subscription_status">Subscription Status: %s</string>
+    <string name="active_premium">Active Premium</string>
+    <string name="free_passive">Free / Passive</string>
 </resources>
