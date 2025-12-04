@@ -49,7 +49,7 @@ public class UserProfileActivity extends AppCompatActivity {
         if (buttonLogout != null) {
             buttonLogout.setOnClickListener(v -> {
                 RetrofitClient.saveToken(UserProfileActivity.this, null, null);
-                Toast.makeText(UserProfileActivity.this, "Çıkış yapıldı", Toast.LENGTH_SHORT).show();
+                Toast.makeText(UserProfileActivity.this, getString(R.string.logout_success), Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(UserProfileActivity.this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
@@ -58,7 +58,7 @@ public class UserProfileActivity extends AppCompatActivity {
         }
 
         if (textViewWelcome != null) {
-            textViewWelcome.setText("Hesabım\nVeriler Yükleniyor...");
+            textViewWelcome.setText(getString(R.string.account_title));
             loadUserData();
         }
     }
@@ -72,12 +72,19 @@ public class UserProfileActivity extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null) {
                     List<Subscription> subs = response.body();
-                    boolean isActive = subs.stream().anyMatch(Subscription::isActive);
+                    boolean isActive = false;
+                    for (Subscription s : subs) {
+                        if (s.isActive()) {
+                            isActive = true;
+                            break;
+                        }
+                    }
 
-                    String statusText = "\n\nAbonelik Durumu: " + (isActive ? "Aktif Premium" : "Ücretsiz / Pasif");
+                    String statusText = "\n\n" + String.format(getString(R.string.subscription_status),
+                            (isActive ? getString(R.string.subscription_active) : getString(R.string.subscription_inactive)));
                     textViewWelcome.append(statusText);
                 } else {
-                     textViewWelcome.append("\n\nAbonelik: Bilgi Alınamadı");
+                     textViewWelcome.append("\n\n" + getString(R.string.subscription_info_error));
                 }
                 // Cihazları çekmeye devam et
                 loadDevices();
@@ -85,7 +92,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<Subscription>> call, Throwable t) {
-                if (textViewWelcome != null) textViewWelcome.append("\n\nAbonelik: Bağlantı Hatası");
+                if (textViewWelcome != null) textViewWelcome.append("\n\n" + getString(R.string.subscription_conn_error));
                 loadDevices();
             }
         });
@@ -99,7 +106,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null) {
                     int count = response.body().size();
-                    textViewWelcome.append("\nBağlı Cihazlar: " + count);
+                    textViewWelcome.append("\n" + String.format(getString(R.string.connected_devices), count));
                 }
             }
 
