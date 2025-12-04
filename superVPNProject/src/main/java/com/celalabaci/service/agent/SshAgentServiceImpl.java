@@ -28,22 +28,23 @@ public class SshAgentServiceImpl implements ISshAgentService {
             session.setPassword(password);
 
             Properties config = new Properties();
-            config.put("StrictHostKeyChecking", "no"); // Host key doğrulamasını atla (Prod'da dikkatli olunmalı)
+            config.put("StrictHostKeyChecking", "no"); // Skip host key checking (Careful in Prod)
+            config.put("PreferredAuthentications", "publickey,keyboard-interactive,password");
             session.setConfig(config);
-            session.setTimeout(10000); // 10 saniye timeout
+            session.setTimeout(10000); // 10 seconds timeout
 
             session.connect();
-            log.info("SSH Bağlantısı Başarılı: {}@{}", username, serverIp);
+            log.info("SSH Connection Successful: {}@{}", username, serverIp);
         } catch (Exception e) {
-            log.error("SSH Bağlantı Hatası: {}", e.getMessage());
-            throw new SshConnectionException(MessageType.SSH_CONNECTION_FAILED, "Sunucuya bağlanılamadı: " + e.getMessage());
+            log.error("SSH Connection Error: {}", e.getMessage());
+            throw new SshConnectionException(MessageType.SSH_CONNECTION_FAILED, "Could not connect to server: " + e.getMessage());
         }
     }
 
     @Override
     public String runCommand(String command) {
         if (session == null || !session.isConnected()) {
-            throw new SshConnectionException(MessageType.SSH_CONNECTION_FAILED, "Aktif bir SSH oturumu yok.");
+            throw new SshConnectionException(MessageType.SSH_CONNECTION_FAILED, "No active SSH session.");
         }
 
         StringBuilder outputBuffer = new StringBuilder();
@@ -56,7 +57,7 @@ public class SshAgentServiceImpl implements ISshAgentService {
             InputStream in = channel.getInputStream();
             channel.connect();
 
-            // Çıktıyı oku
+            // Read output
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -67,8 +68,8 @@ public class SshAgentServiceImpl implements ISshAgentService {
             return outputBuffer.toString();
 
         } catch (Exception e) {
-            log.error("Komut Çalıştırma Hatası: {}", command, e);
-            throw new SshConnectionException(MessageType.SSH_CONNECTION_FAILED, "Komut hatası: " + e.getMessage());
+            log.error("Command Execution Error: {}", command, e);
+            throw new SshConnectionException(MessageType.SSH_CONNECTION_FAILED, "Command error: " + e.getMessage());
         }
     }
 
@@ -76,7 +77,7 @@ public class SshAgentServiceImpl implements ISshAgentService {
     public void disconnect() {
         if (session != null && session.isConnected()) {
             session.disconnect();
-            log.info("SSH Bağlantısı Kapatıldı.");
+            log.info("SSH Connection Closed.");
         }
     }
 
