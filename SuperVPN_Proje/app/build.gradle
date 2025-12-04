@@ -46,7 +46,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
 
     // OpenVPN Library (Replacement for ics-openvpn app dependency)
-    implementation 'com.github.kaikelmax:OpenVPN-Library:0.0.9'
+    implementation 'com.github.oneconnectapi:OneConnectLib:v1.1.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
