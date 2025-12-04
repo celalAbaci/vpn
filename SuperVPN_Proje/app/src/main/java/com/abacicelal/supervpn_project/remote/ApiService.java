@@ -66,15 +66,6 @@ public interface ApiService {
     @POST("api/v1/config/generate")
     Call<VpnConfigResponse> generateConfig(@Body ConfigGenerationRequest configRequest);
 
-    @GET("api/v1/user/servers/{id}/config")
-    Call<ResponseBody> downloadConfigFile(
-            @Path("id") Long serverId,
-            @Query("protocol") String protocol, // "OPENVPN", "WIREGUARD", "IKEV2"
-            @Query("deviceId") Long deviceId,
-            @Query("exitServerId") Long exitServerId, // Multi-hop için
-            @Query("dnsProvider") String dnsProvider // "ADGUARD", "CLOUDFLARE_SECURITY" vb.
-    );
-
     // Abonelik (Subscription) ve Ödeme İşlemleri
     @GET("api/v1/subscription-plans")
     Call<List<SubscriptionPlan>> getSubscriptionPlans();
