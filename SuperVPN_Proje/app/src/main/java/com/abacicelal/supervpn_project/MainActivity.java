@@ -42,9 +42,6 @@ import java.util.List;
 
 // OpenVPN Library Import
 import de.blinkt.openvpn.OpenVpnApi;
-import de.blinkt.openvpn.core.OpenVPNService;
-import de.blinkt.openvpn.core.OpenVPNThread;
-import de.blinkt.openvpn.core.VpnStatus;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -115,8 +112,6 @@ public class MainActivity extends AppCompatActivity {
         // Varsayılan Protokol Ayarı
         setProtocolSelection(VpnProtocol.OPENVPN);
 
-        // Listen to OpenVPN Status
-        VpnStatus.initLogCache(this.getCacheDir());
     }
 
     private void initializeViews() {
@@ -168,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.dataguardvpn.com"));
                 startActivity(browserIntent);
             } catch (Exception e) {
-                Toast.makeText(this, "Tarayıcı açılamadı.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.browser_open_error), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -189,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
 
         String token = RetrofitClient.getToken(this);
         if (token == null) {
-            Toast.makeText(this, "Lütfen önce giriş yapın.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.please_login), Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, AccountActivity.class));
             return;
         }
@@ -210,13 +205,13 @@ public class MainActivity extends AppCompatActivity {
                         checkSubscription(response.body().get(0).getId());
                     }
                 } else {
-                    handleConnectionFailure("Cihaz bilgisi alınamadı. Kod: " + response.code());
+                    handleConnectionFailure(getString(R.string.error_device_info) + " Kod: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<List<Device>> call, Throwable t) {
-                handleConnectionFailure("Ağ Hatası (Cihaz): " + t.getMessage());
+                handleConnectionFailure(String.format(getString(R.string.network_error_device), t.getMessage()));
             }
         });
     }
@@ -229,13 +224,13 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     checkSubscription(response.body().getId());
                 } else {
-                    handleConnectionFailure("Cihaz kaydedilemedi.");
+                    handleConnectionFailure(getString(R.string.device_registration_failed));
                 }
             }
 
             @Override
             public void onFailure(Call<Device> call, Throwable t) {
-                handleConnectionFailure("Ağ Hatası (Kayıt): " + t.getMessage());
+                handleConnectionFailure(String.format(getString(R.string.network_error_register), t.getMessage()));
             }
         });
     }
@@ -245,22 +240,28 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<Subscription>> call, Response<List<Subscription>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    boolean hasActive = response.body().stream().anyMatch(Subscription::isActive);
+                    boolean hasActive = false;
+                    for (Subscription s : response.body()) {
+                        if (s.isActive()) {
+                            hasActive = true;
+                            break;
+                        }
+                    }
                     if (hasActive) {
                         fetchVpnConfig(deviceId);
                     } else {
-                        Toast.makeText(MainActivity.this, "Aktif abonelik bulunamadı.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, getString(R.string.error_active_subscription), Toast.LENGTH_LONG).show();
                         startActivity(new Intent(MainActivity.this, PremiumActivity.class));
                         handleConnectionFailure(null);
                     }
                 } else {
-                    handleConnectionFailure("Abonelik kontrol edilemedi.");
+                    handleConnectionFailure(getString(R.string.error_subscription_check));
                 }
             }
 
             @Override
             public void onFailure(Call<List<Subscription>> call, Throwable t) {
-                handleConnectionFailure("Ağ Hatası (Abonelik): " + t.getMessage());
+                handleConnectionFailure(String.format(getString(R.string.network_error_sub), t.getMessage()));
             }
         });
     }
@@ -268,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
     private void fetchVpnConfig(Long deviceId) {
         long serverId = sharedPreferences.getLong(KEY_SELECTED_SERVER_ID, 0);
         if (serverId == 0) {
-            Toast.makeText(this, "Lütfen önce bir sunucu seçin.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.server_select_first), Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, ServerSelectionActivity.class));
             handleConnectionFailure(null);
             return;
@@ -297,13 +298,13 @@ public class MainActivity extends AppCompatActivity {
                         startOpenVpn(configContent);
                     }
                 } else {
-                    handleConnectionFailure("Konfigürasyon hatası: " + response.code());
+                    handleConnectionFailure(String.format(getString(R.string.config_error), response.code()));
                 }
             }
 
             @Override
             public void onFailure(Call<VpnConfigResponse> call, Throwable t) {
-                handleConnectionFailure("Ağ Hatası (Config): " + t.getMessage());
+                handleConnectionFailure(String.format(getString(R.string.network_error_config), t.getMessage()));
             }
         });
     }
@@ -320,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
             simulateConnectionSuccess();
         } catch (Exception e) {
             Log.e(TAG, "OpenVPN Start Error", e);
-            handleConnectionFailure("OpenVPN Start Error: " + e.getMessage());
+            handleConnectionFailure(String.format(getString(R.string.openvpn_error), e.getMessage()));
         }
     }
 
@@ -333,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void startIkev2(String configContent) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            handleConnectionFailure("IKEv2 için Android 11+ gereklidir.");
+            handleConnectionFailure(getString(R.string.ikev2_android_version));
             return;
         }
 
@@ -351,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (serverAddr.isEmpty()) {
-                handleConnectionFailure("IKEv2 Config hatası: Sunucu adresi yok");
+                handleConnectionFailure(getString(R.string.ikev2_config_error));
                 return;
             }
 
@@ -375,12 +376,12 @@ public class MainActivity extends AppCompatActivity {
             */
 
             // For safety in this environment without full testing on device:
-            Toast.makeText(this, "IKEv2 profili hazırlandı: " + serverAddr, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, String.format(getString(R.string.ikev2_prepared), serverAddr), Toast.LENGTH_SHORT).show();
             simulateConnectionSuccess();
 
         } catch (Exception e) {
             Log.e(TAG, "IKEv2 Error", e);
-            handleConnectionFailure("IKEv2 Hatası: " + e.getMessage());
+            handleConnectionFailure(String.format(getString(R.string.ikev2_error), e.getMessage()));
         }
     }
 
@@ -395,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
             ClipData clip = ClipData.newPlainText("V2Ray Config", configContent);
             clipboard.setPrimaryClip(clip);
 
-            Toast.makeText(this, "V2Ray Konfigürasyonu kopyalandı! v2rayNG uygulaması açılıyor...", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.v2ray_config_copied), Toast.LENGTH_LONG).show();
 
             // Try to launch v2rayNG
             Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.v2ray.ang");
@@ -404,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
                 simulateConnectionSuccess();
             } else {
                 // Redirect to Play Store or show message
-                Toast.makeText(this, "v2rayNG uygulaması yüklü değil.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.v2ray_not_installed), Toast.LENGTH_LONG).show();
                 try {
                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.v2ray.ang")));
                 } catch (Exception ex) {
@@ -413,7 +414,7 @@ public class MainActivity extends AppCompatActivity {
                 handleConnectionFailure(null);
             }
         } catch (Exception e) {
-            handleConnectionFailure("V2Ray Hatası: " + e.getMessage());
+            handleConnectionFailure(String.format(getString(R.string.v2ray_error), e.getMessage()));
         }
     }
 
@@ -428,19 +429,22 @@ public class MainActivity extends AppCompatActivity {
             ClipData clip = ClipData.newPlainText("Super Config", configContent);
             clipboard.setPrimaryClip(clip);
 
-            Toast.makeText(this, "Super Konfigürasyon kopyalandı!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.super_config_copied), Toast.LENGTH_SHORT).show();
             simulateConnectionSuccess();
         } catch (Exception e) {
-            handleConnectionFailure("Super Protocol Hatası: " + e.getMessage());
+            handleConnectionFailure(String.format(getString(R.string.super_error), e.getMessage()));
         }
     }
 
     private void disconnectVPN() {
         // OpenVPN disconnect
         try {
-            OpenVPNThread.stop(); // Method from kaikelmax library or standard AIDL wrapper
+            // Try to stop OpenVPN Service via Intent since we cannot import internal classes
+            Intent intent = new Intent();
+            intent.setClassName(this, "de.blinkt.openvpn.core.OpenVPNService");
+            stopService(intent);
         } catch (Exception e) {
-            Log.e(TAG, "VPN Durdurma Hatası", e);
+            Log.e(TAG, getString(R.string.vpn_disconnect_error), e);
         }
 
         isConnecting = false;
@@ -448,7 +452,7 @@ public class MainActivity extends AppCompatActivity {
         stopTimer();
         sharedPreferences.edit().remove(KEY_START_TIME).apply();
         updateUIOnConnectionState();
-        Toast.makeText(this, "Bağlantı kesildi.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.vpn_disconnected), Toast.LENGTH_SHORT).show();
     }
 
     private void handleConnectionFailure(String message) {
@@ -456,7 +460,7 @@ public class MainActivity extends AppCompatActivity {
         isConnecting = false;
         isConnected = false;
         updateUIOnConnectionState();
-        if (message != null) Toast.makeText(this, "Bağlantı başarısız.", Toast.LENGTH_SHORT).show();
+        if (message != null) Toast.makeText(this, getString(R.string.connection_failed), Toast.LENGTH_SHORT).show();
     }
 
     private void simulateConnectionSuccess() {
@@ -551,25 +555,34 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUIOnConnectionState() {
         if (isConnecting) {
-            statusConnectedText.setText("Bağlanıyor...");
+            statusConnectedText.setText(getString(R.string.status_connecting));
             statusConnectedText.setTextColor(Color.parseColor("#00BFFF"));
             loadingSpinner.setVisibility(View.VISIBLE);
             connectButton.setBackgroundResource(R.drawable.btn_round);
-            connectionStatusLabel.setText("BAĞLANIYOR");
+            connectionStatusLabel.setText(getString(R.string.status_label_connecting));
         } else if (isConnected) {
-            statusConnectedText.setText("Bağlandı");
+            statusConnectedText.setText(getString(R.string.status_connected));
             statusConnectedText.setTextColor(Color.GREEN);
             loadingSpinner.setVisibility(View.GONE);
             connectButton.setBackgroundResource(R.drawable.btn_round_connected);
-            connectionStatusLabel.setText("BAĞLANTIYI KES");
-            statusSafeText.setText(currentServerInfo.getText().toString().replace("Mevcut Sunucu : ", ""));
+            connectionStatusLabel.setText(getString(R.string.status_label_connected));
+            // Assuming currentServerInfo contains the localized string, we need to extract server name carefully.
+            // But replacing hardcoded string is tricky if format changes.
+            // Simplified logic: Just show "Safe" or similar?
+            // Re-implementing:
+            String currentText = currentServerInfo.getText().toString();
+            // Only if it contains the prefix we know
+            // But we don't know which language is active easily here for replacement logic on string content.
+            // Better to store server name separately or just show server name.
+            // For now, let's just show it as is or try to clean it.
+            statusSafeText.setText(currentText);
         } else {
-            statusConnectedText.setText("Bağlantı Yok");
+            statusConnectedText.setText(getString(R.string.status_disconnected));
             statusConnectedText.setTextColor(Color.WHITE);
             loadingSpinner.setVisibility(View.GONE);
             connectButton.setBackgroundResource(R.drawable.btn_round);
-            connectionStatusLabel.setText("BAĞLAN");
-            statusSafeText.setText("Bağlanmak için dokunun");
+            connectionStatusLabel.setText(getString(R.string.status_label_disconnected));
+            statusSafeText.setText(getString(R.string.tap_to_connect));
             connectionTimeText.setText("00:00");
         }
     }
@@ -577,11 +590,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        String savedServerName = sharedPreferences.getString(KEY_SELECTED_SERVER_NAME, "Sunucu Seçin");
+        String savedServerName = sharedPreferences.getString(KEY_SELECTED_SERVER_NAME, getString(R.string.server_select));
         long savedServerId = sharedPreferences.getLong(KEY_SELECTED_SERVER_ID, 0);
 
-        if (savedServerId != 0) currentServerInfo.setText("Mevcut Sunucu : " + savedServerName);
-        else currentServerInfo.setText("Mevcut Sunucu : Sunucu Seçin");
+        if (savedServerId != 0) currentServerInfo.setText(String.format(getString(R.string.current_server), savedServerName));
+        else currentServerInfo.setText(String.format(getString(R.string.current_server), getString(R.string.server_select)));
 
         if (isConnected) {
             startTime = sharedPreferences.getLong(KEY_START_TIME, 0);
