@@ -6,6 +6,7 @@ package com.abacicelal.supervpn_project.remote.model;
  */
 public enum VpnProtocol {
     OPENVPN,
-    WIREGUARD,
-    IKEV2
+    IKEV2,
+    V2RAY, // YENİ
+    SUPER  // YENİ
 }
