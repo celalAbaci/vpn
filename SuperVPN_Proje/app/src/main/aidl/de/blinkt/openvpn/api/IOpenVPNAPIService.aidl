@@ -4,6 +4,8 @@ package de.blinkt.openvpn.api;
 import de.blinkt.openvpn.api.APIVpnProfile;
 import de.blinkt.openvpn.api.IOpenVPNStatusCallback;
 
+import java.util.List;
+
 import android.content.Intent;
 import android.os.ParcelFileDescriptor;
 import android.os.Bundle;
@@ -11,12 +13,12 @@ import android.os.Bundle;
 interface IOpenVPNAPIService {
     List<APIVpnProfile> getProfiles();
 
-    void startProfile (String profileUUID);
+    void startProfile (in String profileUUID);
 
     /** Use a profile with all certificates etc. embedded,
      * old version which does not return the UUID of the addded profile, see
      * below for a version that return the UUID on add */
-    boolean addVPNProfile (String name, String config);
+    boolean addVPNProfile (in String name, in String config);
 
     /** start a profile using a config as inline string. Make sure that all needed data is inlined,
      * e.g., using <ca>...</ca> or <auth-user-pass>...</auth-user-pass>
@@ -63,7 +65,7 @@ interface IOpenVPNAPIService {
 
 
     /** Use a profile with all certificates etc. embedded */
-    APIVpnProfile addNewVPNProfile (String name, boolean userEditable, String config);
+    APIVpnProfile addNewVPNProfile (in String name, boolean userEditable, in String config);
 
     /** Same as startVPN(String), but also takes a Bundle with extra parameters,
     * which will be applied to the created VPNProfile (e.g. allow vpn bypass). */
@@ -73,5 +75,5 @@ interface IOpenVPNAPIService {
     * in startVPNwithExtras(String, Bundle) to apply e.g. "allow vpn bypass" to profile.
     * up to now the only extra that can be put is a boolean "de.blinkt.openvpn.api.ALLOW_VPN_BYPASS"
     */
-    APIVpnProfile addNewVPNProfileWithExtras (String name, boolean userEditable, String config, in Bundle extras);
+    APIVpnProfile addNewVPNProfileWithExtras (in String name, boolean userEditable, in String config, in Bundle extras);
 }
