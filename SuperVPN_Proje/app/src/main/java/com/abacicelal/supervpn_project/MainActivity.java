@@ -41,7 +41,11 @@ import com.abacicelal.supervpn_project.remote.model.VpnProtocol;
 import java.util.List;
 
 // OpenVPN Library Import
-import de.blinkt.openvpn.OpenVpnApi;
+import de.blinkt.openvpn.core.ConfigParser;
+import de.blinkt.openvpn.core.ProfileManager;
+import de.blinkt.openvpn.core.VpnProfile;
+import de.blinkt.openvpn.api.ExternalAppDatabase;
+import de.blinkt.openvpn.LaunchVPN;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -315,12 +319,32 @@ public class MainActivity extends AppCompatActivity {
      */
     private void startOpenVpn(String configContent) {
         try {
-            // Using OpenVpnApi from the library
-            // Parameters: Context, Config content, Country (optional), Username (optional), Password (optional)
-            OpenVpnApi.startVpn(this, configContent, "VPN", null, null);
+            // Adım 1: Gelen config içeriğini ayrıştır (parse et)
+            ConfigParser cp = new ConfigParser();
+            cp.parseConfig(new java.io.StringReader(configContent));
+            VpnProfile vp = cp.convertProfile();
+
+            // Adım 2: Profile bir isim ver ve kaydet
+            // Benzersiz bir isim vermek için UUID kullanmak iyi bir pratiktir.
+            vp.mName = "SuperVPN Profile";
+            ProfileManager.getInstance(this).saveProfile(vp);
+            ProfileManager.getInstance(this).setLastProfile(vp.getUUIDString());
+
+            // Adım 3: Bu profilin harici bir uygulama tarafından kullanılmasına izin ver
+            ExternalAppDatabase ead = new ExternalAppDatabase(this);
+            ead.addAllowedApp(getPackageName()); // Kendi uygulamanızın paket adını izinli listesine ekleyin.
+
+            // Adım 4: VPN'i başlatmak için Intent oluştur ve başlat
+            Intent intent = new Intent(this, LaunchVPN.class);
+            intent.putExtra(LaunchVPN.EXTRA_KEY, vp.getUUIDString());
+            intent.setAction(Intent.ACTION_MAIN);
+            startActivity(intent);
+
+            // Bağlantının başarılı olduğunu varsayıyoruz (durum takibi için daha gelişmiş bir yapı gerekir)
             simulateConnectionSuccess();
+
         } catch (Exception e) {
-            Log.e(TAG, "OpenVPN Start Error", e);
+            Log.e(TAG, "OpenVPN Başlatma Hatası", e);
             handleConnectionFailure(String.format(getString(R.string.openvpn_error), e.getMessage()));
         }
     }
