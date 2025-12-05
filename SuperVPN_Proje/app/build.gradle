@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace 'com.abacicelal.supervpn_project'
-    compileSdk 34 // Updated to be compatible with libraries
+    compileSdk 35 // Updated to be compatible with libraries
 
     defaultConfig {
         applicationId "com.abacicelal.supervpn_project"
