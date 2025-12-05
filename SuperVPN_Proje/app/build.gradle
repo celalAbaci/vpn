@@ -16,6 +16,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        aidl true
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -44,9 +48,6 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
-
-    // OpenVPN Library (Replacement for ics-openvpn app dependency)
-    implementation 'com.github.schwabe:ics-openvpn:v0.7.51'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
