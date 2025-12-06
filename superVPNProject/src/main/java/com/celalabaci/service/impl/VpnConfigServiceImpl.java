@@ -46,8 +46,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         switch (request.getProtocol()) {
             case OPENVPN:
-                AgentDTOs.OpenVpnCredentials ovpn = vpnApiAgentService.provisionOpenVpnUser(entryServer, currentUser, device);
-                configContent = ovpn.getUserCert(); // Full OVPN içeriği
+                // DEĞİŞİKLİK: SSH yerine veritabanındaki config metnini kullan
+                if (entryServer.getOvpnConfigData() != null && !entryServer.getOvpnConfigData().isEmpty()) {
+                    configContent = entryServer.getOvpnConfigData();
+                } else {
+                    // Fallback or error if config is missing
+                     throw new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "OpenVPN Config verisi sunucuda tanımlı değil.");
+                }
                 break;
 
             case IKEV2:
