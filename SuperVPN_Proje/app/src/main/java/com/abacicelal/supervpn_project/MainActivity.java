@@ -1,23 +1,21 @@
 package com.abacicelal.supervpn_project;
 
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.net.Ikev2VpnProfile;
 import android.net.Uri;
-import android.net.VpnManager;
+import android.net.VpnService;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -32,6 +30,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+// LocalBroadcastManager removed as per code review, using global receiver
 
 import com.abacicelal.supervpn_project.remote.ApiService;
 import com.abacicelal.supervpn_project.remote.RetrofitClient;
@@ -42,11 +41,18 @@ import com.abacicelal.supervpn_project.remote.model.Subscription;
 import com.abacicelal.supervpn_project.remote.model.VpnConfigResponse;
 import com.abacicelal.supervpn_project.remote.model.VpnProtocol;
 
+import java.io.StringReader;
 import java.util.List;
+import java.util.UUID;
 
-// OpenVPN AIDL Import
-import de.blinkt.openvpn.api.IOpenVPNAPIService;
-import de.blinkt.openvpn.api.IOpenVPNStatusCallback;
+// OpenVPN Embedded Library Imports
+import de.blinkt.openvpn.VpnProfile;
+import de.blinkt.openvpn.core.ConfigParser;
+import de.blinkt.openvpn.core.ProfileManager;
+import de.blinkt.openvpn.core.VPNLaunchHelper;
+import de.blinkt.openvpn.core.OpenVPNService;
+import de.blinkt.openvpn.core.VpnStatus;
+import de.blinkt.openvpn.core.ConnectionStatus;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -99,39 +105,34 @@ public class MainActivity extends AppCompatActivity {
     // Seçilen protokol
     private VpnProtocol selectedProtocol = VpnProtocol.OPENVPN;
 
-    // OpenVPN AIDL Service
-    private IOpenVPNAPIService mService;
+    // OpenVPN Service interaction
     private static final int ICS_OPENVPN_PERMISSION = 7;
+    private String pendingConfigContent = null; // To store config if permission is needed
 
-    private ServiceConnection mConnection = new ServiceConnection() {
+    // VpnStatus.StateListener Implementation
+    private VpnStatus.StateListener vpnStateListener = new VpnStatus.StateListener() {
         @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            mService = IOpenVPNAPIService.Stub.asInterface(service);
-            try {
-                // Register status callback to get updates
-                mService.registerStatusCallback(mCallback);
-            } catch (RemoteException e) {
-                Log.e(TAG, "Error registering status callback", e);
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName className) {
-            mService = null;
-        }
-    };
-
-    private IOpenVPNStatusCallback mCallback = new IOpenVPNStatusCallback.Stub() {
-        @Override
-        public void newStatus(String uuid, String state, String message, String level) throws RemoteException {
+        public void updateState(String state, String logmessage, int localizedResId, ConnectionStatus level, Intent Intent) {
             runOnUiThread(() -> {
-                 if ("CONNECTED".equals(state)) {
-                     if (!isConnected) simulateConnectionSuccess();
-                 } else if ("NONETWORK".equals(state) || "DISCONNECTED".equals(state) || "AUTH_FAILED".equals(state)) {
-                     if (isConnected) disconnectVPN();
-                 }
-                 Log.d(TAG, "OpenVPN Status: " + state + " - " + message);
+                Log.d(TAG, "OpenVPN Status: " + state + " - " + logmessage);
+
+                if (level == ConnectionStatus.LEVEL_CONNECTED) {
+                    if (!isConnected) simulateConnectionSuccess();
+                } else if (level == ConnectionStatus.LEVEL_NOTCONNECTED || level == ConnectionStatus.LEVEL_AUTH_FAILED) {
+                     if (isConnected) {
+                        isConnected = false;
+                        isConnecting = false;
+                        stopTimer();
+                        updateUIOnConnectionState();
+                        Toast.makeText(MainActivity.this, getString(R.string.vpn_disconnected), Toast.LENGTH_SHORT).show();
+                     }
+                }
             });
+        }
+
+        @Override
+        public void setConnectedVPN(String uuid) {
+            // Optional: Handle connected VPN UUID change
         }
     };
 
@@ -152,26 +153,14 @@ public class MainActivity extends AppCompatActivity {
 
         // Varsayılan Protokol Ayarı
         setProtocolSelection(VpnProtocol.OPENVPN);
-
-        bindOpenVPNService();
     }
 
     private void bindOpenVPNService() {
-        Intent intent = new Intent("de.blinkt.openvpn.api.IOpenVPNAPIService");
-        intent.setPackage("de.blinkt.openvpn");
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        // No longer binding to external app
     }
 
     private void unbindOpenVPNService() {
-        if (mService != null) {
-            try {
-                mService.unregisterStatusCallback(mCallback);
-            } catch (RemoteException e) {
-                Log.e(TAG, "Error unregistering status callback", e);
-            }
-            unbindService(mConnection);
-            mService = null;
-        }
+        // No longer binding to external app
     }
 
     private void initializeViews() {
@@ -206,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupListeners() {
         connectButton.setOnClickListener(v -> handleConnectButtonClick());
-        menuButton.setOnClickListener(v -> toggleSideMenu());
+        menuButton = findViewById(R.id.menuButton);
         dimBackground.setOnClickListener(v -> closeSideMenu());
 
         setupProtocolButtons();
@@ -370,31 +359,43 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * OpenVPN implementation using remote OpenVPN for Android app (via AIDL).
-     * This requires the user to have "OpenVPN for Android" (de.blinkt.openvpn) installed.
+     * OpenVPN implementation using embedded library.
      */
     private void startOpenVpn(String configContent) {
-        if (mService == null) {
-            handleConnectionFailure("OpenVPN Service not bound. Is 'OpenVPN for Android' installed?");
-            try {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=de.blinkt.openvpn")));
-            } catch (Exception e) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=de.blinkt.openvpn")));
-            }
+        // Check for VPN permission first
+        Intent intent = VpnService.prepare(this);
+        if (intent != null) {
+            pendingConfigContent = configContent;
+            startActivityForResult(intent, ICS_OPENVPN_PERMISSION);
             return;
         }
 
+        startEmbeddedVpn(configContent);
+    }
+
+    private void startEmbeddedVpn(String configContent) {
         try {
-            // Check permissions
-            Intent permissionIntent = mService.prepare(getPackageName());
-            if (permissionIntent != null) {
-                startActivityForResult(permissionIntent, ICS_OPENVPN_PERMISSION);
-            } else {
-                // Have permission, start VPN
-                mService.startVPN(configContent);
+            ConfigParser cp = new ConfigParser();
+            cp.parseConfig(new StringReader(configContent));
+            VpnProfile vp = cp.convertProfile();
+            vp.mName = "SuperVPN Profile";
+
+            // Avoid duplicate profiles
+            ProfileManager pm = ProfileManager.getInstance(this);
+            VpnProfile existing = pm.getProfileByName(vp.mName);
+            if (existing != null) {
+                pm.removeProfile(this, existing);
             }
-        } catch (RemoteException e) {
-            Log.e(TAG, "OpenVPN Service Error", e);
+
+            pm.addProfile(vp);
+            pm.saveProfile(this, vp);
+            pm.saveProfileList(this);
+
+            // Start VPN
+            VPNLaunchHelper.startOpenVpn(vp, this, "User Clicked Connect", false);
+
+        } catch (Exception e) {
+            Log.e(TAG, "OpenVPN Start Error", e);
             handleConnectionFailure(String.format(getString(R.string.openvpn_error), e.getMessage()));
         }
     }
@@ -404,11 +405,15 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == ICS_OPENVPN_PERMISSION) {
             if (resultCode == RESULT_OK) {
-                // Permission granted, retry connection?
-                // Ideally we should cache the config and retry
-                Toast.makeText(this, "Permission granted. Please try connecting again.", Toast.LENGTH_LONG).show();
+                if (pendingConfigContent != null) {
+                    startEmbeddedVpn(pendingConfigContent);
+                    pendingConfigContent = null;
+                } else {
+                     Toast.makeText(this, "Permission granted. Please try connecting again.", Toast.LENGTH_LONG).show();
+                }
             } else {
                 handleConnectionFailure("VPN Permission denied.");
+                pendingConfigContent = null;
             }
         }
     }
@@ -525,31 +530,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void disconnectVPN() {
-        if (mService != null) {
-            try {
-                mService.disconnect();
-            } catch (RemoteException e) {
-                Log.e(TAG, "Error disconnecting OpenVPN", e);
-            }
-        } else {
-             // Fallback for simulation
-             // OpenVPN disconnect
-            try {
-                // Try to stop OpenVPN Service via Intent since we cannot import internal classes
-                Intent intent = new Intent();
-                intent.setClassName(this, "de.blinkt.openvpn.core.OpenVPNService");
-                stopService(intent);
-            } catch (Exception e) {
-                Log.e(TAG, getString(R.string.vpn_disconnect_error), e);
-            }
+        try {
+             // ics-openvpn disconnect
+             // Just stop the service for now.
+             stopService(new Intent(this, OpenVPNService.class));
+
+        } catch (Exception e) {
+             Log.e(TAG, "Error disconnecting", e);
         }
 
+        // Status receiver will handle UI update
         isConnecting = false;
-        isConnected = false;
-        stopTimer();
-        sharedPreferences.edit().remove(KEY_START_TIME).apply();
-        updateUIOnConnectionState();
-        Toast.makeText(this, getString(R.string.vpn_disconnected), Toast.LENGTH_SHORT).show();
     }
 
     private void handleConnectionFailure(String message) {
@@ -687,6 +678,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // Add State Listener
+        VpnStatus.addStateListener(vpnStateListener);
+
         String savedServerName = sharedPreferences.getString(KEY_SELECTED_SERVER_NAME, getString(R.string.server_select));
         long savedServerId = sharedPreferences.getLong(KEY_SELECTED_SERVER_ID, 0);
 
@@ -696,15 +691,20 @@ public class MainActivity extends AppCompatActivity {
         if (isConnected) {
             startTime = sharedPreferences.getLong(KEY_START_TIME, 0);
             if (startTime > 0) startTimer();
-            else disconnectVPN();
+            // Don't disconnect here on resume, just update state
         }
         updateUIOnConnectionState();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        VpnStatus.removeStateListener(vpnStateListener);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         stopTimer();
-        unbindOpenVPNService();
     }
 }

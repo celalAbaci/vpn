@@ -33,6 +33,9 @@ public class VpnServer extends BaseEntity {
     @Column(name = "admin_api_port")
     private Integer adminApiPort; // X-UI veya WireGuard paneli için port (örn: 2053, 51821)
 
+    @Column(name = "ovpn_config_data", columnDefinition = "TEXT")
+    private String ovpnConfigData;
+
     // --- Sunucu Yük İzleme ---
     @Column(name = "current_load_percentage")
     private Float currentLoadPercentage = 0.0f;
