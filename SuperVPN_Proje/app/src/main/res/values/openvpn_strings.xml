@@ -1,7 +1,0 @@
-<resources>
-    <string name="vpn_launch_title">Connecting...</string>
-    <style name="blinkt.translucent" parent="@android:style/Theme.Translucent">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowIsTranslucent">true</item>
-    </style>
-</resources>
