@@ -44,4 +44,9 @@
     <string name="super_error">Super Protocol Error: %s</string>
     <string name="vpn_disconnected">Disconnected.</string>
     <string name="server_select_first">Please select a server first.</string>
+    <string name="menu">Menu</string>
+    <string name="premium">Premium</string>
+    <string name="browser">Browser</string>
+    <string name="location_selection">Location Selection</string>
+    <string name="help">Help</string>
 </resources>
