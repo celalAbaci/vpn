@@ -1,0 +1,38 @@
+# Bu dosya, Prometheus ve Grafana servislerini yerel ortamda başlatır.
+# Terminalde bu dosyanın olduğu klasörde 'docker-compose up -d' komutunu çalıştırın.
+version: '3.8'
+
+services:
+  # 1. Prometheus Servisi (Veri Toplayıcı)
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    container_name: prometheus
+    ports:
+      - "9090:9090" # Prometheus arayüzüne http://localhost:9090 adresinden erişim sağlar.
+    volumes:
+      # prometheus.yml yapılandırma dosyamızı container'ın içine kopyalar
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    # Bu satır, container'ın 'host.docker.internal' adresini
+    # host makinesinin (yani 'localhost'un) IP'si olarak tanımasını sağlar.
+    # Spring Boot uygulamamız host'ta çalıştığı için bu gereklidir.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # 2. Grafana Servisi (Görselleştirici)
+  grafana:
+    image: grafana/grafana-oss:10.2.2
+    container_name: grafana
+    ports:
+      - "3000:3000" # Grafana arayüzüne http://localhost:3000 adresinden erişim sağlar.
+    # Bu volume, Grafana dashboard'larınızı ve ayarlarınızı
+    # container silinse bile kaydetmenizi sağlar.
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
+# Docker'ın Grafana ayarlarını kaydetmesi için kalıcı bir alan oluşturur
+volumes:
+  grafana-data: {}
