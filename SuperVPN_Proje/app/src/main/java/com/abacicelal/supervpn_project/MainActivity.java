@@ -246,12 +246,8 @@ public class MainActivity extends AppCompatActivity {
     private void startVPNConnection() {
         Log.d(TAG, "VPN Bağlantısı Başlatılıyor...");
 
+        // GUEST MODE logic: Token can be null now.
         String token = RetrofitClient.getToken(this);
-        if (token == null) {
-            Toast.makeText(this, getString(R.string.please_login), Toast.LENGTH_LONG).show();
-            startActivity(new Intent(this, AccountActivity.class));
-            return;
-        }
 
         isConnecting = true;
         updateUIOnConnectionState();
@@ -259,6 +255,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchDeviceAndCheckSubscription() {
+        // GUEST MODE: Skip fetchMyDevices if no token
+        if (RetrofitClient.getToken(this) == null) {
+            // Check if we already have a registered Guest ID
+            Long registeredId = com.abacicelal.supervpn_project.utils.DeviceIdManager.getRegisteredDeviceId(this);
+            if (registeredId != null) {
+                checkSubscription(registeredId); // Will skip sub check inside
+            } else {
+                registerDevice();
+            }
+            return;
+        }
+
         apiService.getMyDevices().enqueue(new Callback<ApiResponse<List<Device>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Device>>> call, Response<ApiResponse<List<Device>>> response) {
@@ -305,7 +313,13 @@ public class MainActivity extends AppCompatActivity {
      * Bu metod, bağlantı kurmadan sadece görsel durumları güncellemek için kullanılır.
      */
     private void checkSubscriptionStatusForUI() {
-        if (RetrofitClient.getToken(this) == null) return;
+        if (RetrofitClient.getToken(this) == null) {
+            // Guest User
+            if (menuAccount != null) menuAccount.setText("Misafir");
+             if (premiumButton != null) premiumButton.setVisibility(View.VISIBLE);
+             if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.VISIBLE);
+            return;
+        }
 
         apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
@@ -315,6 +329,7 @@ public class MainActivity extends AppCompatActivity {
                     List<Subscription> subs = response.body().getData();
                     if (subs != null) {
                         for (Subscription s : subs) {
+                            // Check for both isActive flag AND valid dates if needed, but isActive should suffice
                             if (s.isActive()) {
                                 hasActive = true;
                                 break;
@@ -330,6 +345,7 @@ public class MainActivity extends AppCompatActivity {
                         // Free kullanıcı: Premium butonlarını göster
                         if (premiumButton != null) premiumButton.setVisibility(View.VISIBLE);
                         if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.VISIBLE);
+                         if (menuAccount != null) menuAccount.setText(getString(R.string.account_title) + " (Free)");
                     }
                 }
             }

@@ -76,6 +76,15 @@
             android:layout_marginTop="16dp"
             android:clickable="true"
             android:focusable="true"/>
+
+        <Button
+            android:id="@+id/buttonGuest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Misafir Olarak Devam Et"
+            android:backgroundTint="#444444"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="16dp"/>
     </LinearLayout>
 
 </FrameLayout>

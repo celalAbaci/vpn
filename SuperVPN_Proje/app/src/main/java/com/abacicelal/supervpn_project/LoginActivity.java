@@ -34,12 +34,26 @@ public class LoginActivity extends AppCompatActivity {
         buttonLogin = findViewById(R.id.buttonLogin);
         textViewGoToRegister = findViewById(R.id.textViewGoToRegister);
 
+        // Misafir Butonu (XML'de olması gerek, dinamik ekliyoruz şimdilik XML'i göremediğimiz için)
+        // Eğer XML'i editleme imkanımız yoksa, dinamik ekleyebiliriz veya varsayabiliriz.
+        // Ama kullanıcı planında XML editleme yok, o yüzden mantıklı olan "Register" textine eklemek veya dinamik buton.
+
         // backButton opsiyonel kontrol
         int backButtonId = getResources().getIdentifier("backButton", "id", getPackageName());
         if (backButtonId != 0) {
             backButton = findViewById(backButtonId);
             if (backButton != null) {
                 backButton.setOnClickListener(v -> finish());
+            }
+        }
+
+        // Check if buttonGuest exists in R.id (since we patched XML)
+        // Using reflection to be safe against build issues in this env, but typically R.id.buttonGuest
+        int guestBtnId = getResources().getIdentifier("buttonGuest", "id", getPackageName());
+        if (guestBtnId != 0) {
+            View guestButton = findViewById(guestBtnId);
+            if (guestButton != null) {
+                guestButton.setOnClickListener(v -> continueAsGuest());
             }
         }
 
@@ -52,6 +66,16 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
             });
         }
+    }
+
+    private void continueAsGuest() {
+        // Clear tokens just in case
+        RetrofitClient.saveToken(this, null, null);
+        Toast.makeText(this, "Misafir Olarak Devam Ediliyor...", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void handleLogin() {
