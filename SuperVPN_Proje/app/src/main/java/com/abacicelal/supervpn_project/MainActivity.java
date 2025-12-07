@@ -154,6 +154,9 @@ public class MainActivity extends AppCompatActivity {
         // Varsayılan Protokol Ayarı
         setProtocolSelection(VpnProtocol.OPENVPN);
 
+        // Kullanıcı abonelik durumunu kontrol et ve UI güncelle
+        checkSubscriptionStatusForUI();
+
         bindOpenVPNService();
     }
 
@@ -297,6 +300,47 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * UI Güncellemesi için abonelik durumunu kontrol eder.
+     * Bu metod, bağlantı kurmadan sadece görsel durumları güncellemek için kullanılır.
+     */
+    private void checkSubscriptionStatusForUI() {
+        if (RetrofitClient.getToken(this) == null) return;
+
+        apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    boolean hasActive = false;
+                    List<Subscription> subs = response.body().getData();
+                    if (subs != null) {
+                        for (Subscription s : subs) {
+                            if (s.isActive()) {
+                                hasActive = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (hasActive) {
+                        // Premium kullanıcı: Premium butonlarını gizle
+                        if (premiumButton != null) premiumButton.setVisibility(View.GONE);
+                        if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.GONE);
+                        if (menuAccount != null) menuAccount.setText(getString(R.string.account_title) + " (Premium)");
+                    } else {
+                        // Free kullanıcı: Premium butonlarını göster
+                        if (premiumButton != null) premiumButton.setVisibility(View.VISIBLE);
+                        if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Subscription>>> call, Throwable t) {
+                // Hata durumunda UI'da değişiklik yapma, varsayılan kalsın
+            }
+        });
+    }
+
     private void checkSubscription(Long deviceId) {
         apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
@@ -313,6 +357,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     if (hasActive) {
+                        // Bağlantı öncesi kontrol başarılı, UI'ı da güncelle
+                        if (premiumButton != null) premiumButton.setVisibility(View.GONE);
+                        if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.GONE);
+
                         fetchVpnConfig(deviceId);
                     } else {
                         Toast.makeText(MainActivity.this, getString(R.string.error_active_subscription), Toast.LENGTH_LONG).show();
@@ -705,6 +753,7 @@ public class MainActivity extends AppCompatActivity {
             else disconnectVPN();
         }
         updateUIOnConnectionState();
+        checkSubscriptionStatusForUI();
     }
 
     @Override
