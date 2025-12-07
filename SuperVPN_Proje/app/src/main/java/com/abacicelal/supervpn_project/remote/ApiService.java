@@ -36,71 +36,68 @@ public interface ApiService {
 
     // Kullanıcı, Cihaz ve Durum İşlemleri
     @GET("api/v1/user/heartbeat")
-    Call<HeartbeatResponse> checkHeartbeat();
+    Call<ApiResponse<HeartbeatResponse>> checkHeartbeat();
 
     @GET("api/v1/devices/my")
-    Call<List<Device>> getMyDevices();
+    Call<ApiResponse<List<Device>>> getMyDevices();
 
     @POST("api/v1/devices/my")
-    Call<Device> registerDevice(@Body DeviceRequest deviceRequest);
+    Call<ApiResponse<Device>> registerDevice(@Body DeviceRequest deviceRequest);
 
     @PUT("api/v1/devices/my/{id}")
-    Call<Device> updateDevice(@Path("id") Long deviceId, @Body DeviceUpdateRequest updateRequest);
+    Call<ApiResponse<Device>> updateDevice(@Path("id") Long deviceId, @Body DeviceUpdateRequest updateRequest);
 
     @DELETE("api/v1/devices/my/{id}")
-    Call<Void> deleteDevice(@Path("id") Long deviceId);
+    Call<ApiResponse<Void>> deleteDevice(@Path("id") Long deviceId);
 
     // Sunucu (Server) ve Konfigürasyon İşlemleri
-    // DÜZELTME: Sadece getActiveServers metodunu wrapper ile güncelledik.
-    // Diğer metodlar da backend tarafında wrapper kullanıyorsa güncellenmelidir,
-    // ancak şu anlık derleme hatası almamak için sadece bu metodu değiştiriyoruz.
     @GET("api/v1/servers/active")
     Call<ApiResponse<List<Server>>> getActiveServers();
 
     @GET("api/v1/servers/{id}")
-    Call<Server> getServerDetails(@Path("id") Long serverId);
+    Call<ApiResponse<Server>> getServerDetails(@Path("id") Long serverId);
 
     @GET("api/v1/countries")
-    Call<List<Country>> getCountries();
+    Call<ApiResponse<List<Country>>> getCountries();
 
     @GET("api/v1/countries/{id}")
-    Call<Country> getCountryDetails(@Path("id") Long countryId);
+    Call<ApiResponse<Country>> getCountryDetails(@Path("id") Long countryId);
 
     @POST("api/v1/config/generate")
-    Call<VpnConfigResponse> generateConfig(@Body ConfigGenerationRequest configRequest);
+    Call<ApiResponse<VpnConfigResponse>> generateConfig(@Body ConfigGenerationRequest configRequest);
 
     // Abonelik (Subscription) ve Ödeme İşlemleri
     @GET("api/v1/subscription-plans")
-    Call<List<SubscriptionPlan>> getSubscriptionPlans();
+    Call<ApiResponse<List<SubscriptionPlan>>> getSubscriptionPlans();
 
     @GET("api/v1/subscription-plans/{id}")
-    Call<SubscriptionPlan> getSubscriptionPlanDetails(@Path("id") Long planId);
+    Call<ApiResponse<SubscriptionPlan>> getSubscriptionPlanDetails(@Path("id") Long planId);
 
     @GET("api/v1/subscriptions/my")
-    Call<List<Subscription>> getMySubscriptions();
+    Call<ApiResponse<List<Subscription>>> getMySubscriptions();
 
     @POST("api/v1/subscriptions")
-    Call<Subscription> startManualSubscription(@Body ManualSubscriptionRequest manualRequest);
+    Call<ApiResponse<Subscription>> startManualSubscription(@Body ManualSubscriptionRequest manualRequest);
 
     @PUT("api/v1/subscriptions/{id}/cancel")
-    Call<Subscription> cancelSubscription(@Path("id") Long subscriptionId);
+    Call<ApiResponse<Subscription>> cancelSubscription(@Path("id") Long subscriptionId);
 
     @POST("api/v1/payment/google/verify-subscription")
-    Call<Subscription> verifyGooglePurchase(@Body GooglePurchaseRequest purchaseRequest);
+    Call<ApiResponse<Subscription>> verifyGooglePurchase(@Body GooglePurchaseRequest purchaseRequest);
 
     @GET("api/v1/payments/my")
-    Call<List<Payment>> getMyPayments();
+    Call<ApiResponse<List<Payment>>> getMyPayments();
 
     // Diğer İşlemler (Loglar ve Duyurular)
     @GET("api/v1/announcements")
-    Call<List<Announcement>> getAnnouncements();
+    Call<ApiResponse<List<Announcement>>> getAnnouncements();
 
     @GET("api/v1/announcements/{id}")
-    Call<Announcement> getAnnouncementDetails(@Path("id") Long announcementId);
+    Call<ApiResponse<Announcement>> getAnnouncementDetails(@Path("id") Long announcementId);
 
     @GET("api/v1/logs/my")
-    Call<List<ConnectionLog>> getMyLogs();
+    Call<ApiResponse<List<ConnectionLog>>> getMyLogs();
 
     @POST("api/v1/logs/my")
-    Call<ConnectionLog> createLog(@Body CreateLogRequest logRequest);
+    Call<ApiResponse<ConnectionLog>> createLog(@Body CreateLogRequest logRequest);
 }

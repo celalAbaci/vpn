@@ -35,6 +35,7 @@ import androidx.core.content.ContextCompat;
 
 import com.abacicelal.supervpn_project.remote.ApiService;
 import com.abacicelal.supervpn_project.remote.RetrofitClient;
+import com.abacicelal.supervpn_project.remote.model.ApiResponse;
 import com.abacicelal.supervpn_project.remote.model.ConfigGenerationRequest;
 import com.abacicelal.supervpn_project.remote.model.Device;
 import com.abacicelal.supervpn_project.remote.model.DeviceRequest;
@@ -255,14 +256,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchDeviceAndCheckSubscription() {
-        apiService.getMyDevices().enqueue(new Callback<List<Device>>() {
+        apiService.getMyDevices().enqueue(new Callback<ApiResponse<List<Device>>>() {
             @Override
-            public void onResponse(Call<List<Device>> call, Response<List<Device>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    if (response.body().isEmpty()) {
+            public void onResponse(Call<ApiResponse<List<Device>>> call, Response<ApiResponse<List<Device>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    List<Device> devices = response.body().getData();
+                    if (devices == null || devices.isEmpty()) {
                         registerDevice();
                     } else {
-                        checkSubscription(response.body().get(0).getId());
+                        checkSubscription(devices.get(0).getId());
                     }
                 } else {
                     handleConnectionFailure(getString(R.string.error_device_info) + " Kod: " + response.code());
@@ -270,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<Device>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<List<Device>>> call, Throwable t) {
                 handleConnectionFailure(String.format(getString(R.string.network_error_device), t.getMessage()));
             }
         });
@@ -278,33 +280,36 @@ public class MainActivity extends AppCompatActivity {
 
     private void registerDevice() {
         String deviceName = "Android Cihaz " + android.os.Build.MODEL;
-        apiService.registerDevice(new DeviceRequest(deviceName)).enqueue(new Callback<Device>() {
+        apiService.registerDevice(new DeviceRequest(deviceName)).enqueue(new Callback<ApiResponse<Device>>() {
             @Override
-            public void onResponse(Call<Device> call, Response<Device> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    checkSubscription(response.body().getId());
+            public void onResponse(Call<ApiResponse<Device>> call, Response<ApiResponse<Device>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    checkSubscription(response.body().getData().getId());
                 } else {
                     handleConnectionFailure(getString(R.string.device_registration_failed));
                 }
             }
 
             @Override
-            public void onFailure(Call<Device> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<Device>> call, Throwable t) {
                 handleConnectionFailure(String.format(getString(R.string.network_error_register), t.getMessage()));
             }
         });
     }
 
     private void checkSubscription(Long deviceId) {
-        apiService.getMySubscriptions().enqueue(new Callback<List<Subscription>>() {
+        apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
-            public void onResponse(Call<List<Subscription>> call, Response<List<Subscription>> response) {
-                if (response.isSuccessful() && response.body() != null) {
+            public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     boolean hasActive = false;
-                    for (Subscription s : response.body()) {
-                        if (s.isActive()) {
-                            hasActive = true;
-                            break;
+                    List<Subscription> subs = response.body().getData();
+                    if (subs != null) {
+                        for (Subscription s : subs) {
+                            if (s.isActive()) {
+                                hasActive = true;
+                                break;
+                            }
                         }
                     }
                     if (hasActive) {
@@ -320,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<Subscription>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<List<Subscription>>> call, Throwable t) {
                 handleConnectionFailure(String.format(getString(R.string.network_error_sub), t.getMessage()));
             }
         });
@@ -337,12 +342,13 @@ public class MainActivity extends AppCompatActivity {
 
         ConfigGenerationRequest request = new ConfigGenerationRequest(serverId, deviceId, selectedProtocol);
 
-        apiService.generateConfig(request).enqueue(new Callback<VpnConfigResponse>() {
+        apiService.generateConfig(request).enqueue(new Callback<ApiResponse<VpnConfigResponse>>() {
             @Override
-            public void onResponse(Call<VpnConfigResponse> call, Response<VpnConfigResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String configContent = response.body().getConfigurationFileContent();
-                    String protocol = response.body().getProtocol();
+            public void onResponse(Call<ApiResponse<VpnConfigResponse>> call, Response<ApiResponse<VpnConfigResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    VpnConfigResponse configResponse = response.body().getData();
+                    String configContent = configResponse.getConfigurationFileContent();
+                    String protocol = configResponse.getProtocol();
 
                     Log.i(TAG, "Config alındı. Protokol: " + protocol);
 
@@ -363,7 +369,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<VpnConfigResponse> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<VpnConfigResponse>> call, Throwable t) {
                 handleConnectionFailure(String.format(getString(R.string.network_error_config), t.getMessage()));
             }
         });
