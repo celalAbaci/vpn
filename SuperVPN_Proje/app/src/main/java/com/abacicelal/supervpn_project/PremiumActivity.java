@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.abacicelal.supervpn_project.remote.ApiService;
 import com.abacicelal.supervpn_project.remote.RetrofitClient;
+import com.abacicelal.supervpn_project.remote.model.ApiResponse;
 import com.abacicelal.supervpn_project.remote.model.SubscriptionPlan;
 
 import java.math.BigDecimal;
@@ -107,22 +108,25 @@ public class PremiumActivity extends AppCompatActivity {
         loadingBar.setVisibility(View.VISIBLE);
         setAllLayoutsEnabled(false);
 
-        apiService.getSubscriptionPlans().enqueue(new Callback<List<SubscriptionPlan>>() {
+        apiService.getSubscriptionPlans().enqueue(new Callback<ApiResponse<List<SubscriptionPlan>>>() {
             @Override
-            public void onResponse(Call<List<SubscriptionPlan>> call, Response<List<SubscriptionPlan>> response) {
+            public void onResponse(Call<ApiResponse<List<SubscriptionPlan>>> call, Response<ApiResponse<List<SubscriptionPlan>>> response) {
                 loadingBar.setVisibility(View.GONE);
                 setAllLayoutsEnabled(true);
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.d(TAG, response.body().size() + " adet plan çekildi.");
-                    populatePlans(response.body());
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Log.d(TAG, response.body().getData().size() + " adet plan çekildi.");
+                    populatePlans(response.body().getData());
                 } else {
                     Log.e(TAG, "Planlar çekilemedi. Hata: " + response.code());
-                    Toast.makeText(PremiumActivity.this, "Abonelik planları yüklenemedi (Hata: " + response.code() + ")", Toast.LENGTH_SHORT).show();
+                    String errorMsg = (response.body() != null && response.body().getMessage() != null)
+                            ? response.body().getMessage()
+                            : "Abonelik planları yüklenemedi";
+                    Toast.makeText(PremiumActivity.this, errorMsg + " (Hata: " + response.code() + ")", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<List<SubscriptionPlan>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<List<SubscriptionPlan>>> call, Throwable t) {
                 loadingBar.setVisibility(View.GONE);
                 setAllLayoutsEnabled(true);
                 Log.e(TAG, "Plan çekme hatası (onFailure): ", t);

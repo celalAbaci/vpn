@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.abacicelal.supervpn_project.remote.ApiService;
 import com.abacicelal.supervpn_project.remote.RetrofitClient;
+import com.abacicelal.supervpn_project.remote.model.ApiResponse;
 import com.abacicelal.supervpn_project.remote.model.Subscription;
 import com.abacicelal.supervpn_project.remote.model.Device;
 
@@ -65,13 +66,13 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private void loadUserData() {
         // 1. Abonelikleri Çek
-        apiService.getMySubscriptions().enqueue(new Callback<List<Subscription>>() {
+        apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
-            public void onResponse(Call<List<Subscription>> call, Response<List<Subscription>> response) {
+            public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
                 if (textViewWelcome == null) return;
 
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Subscription> subs = response.body();
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    List<Subscription> subs = response.body().getData();
                     boolean isActive = false;
                     for (Subscription s : subs) {
                         if (s.isActive()) {
@@ -91,7 +92,7 @@ public class UserProfileActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<Subscription>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<List<Subscription>>> call, Throwable t) {
                 if (textViewWelcome != null) textViewWelcome.append("\n\n" + getString(R.string.subscription_conn_error));
                 loadDevices();
             }
@@ -99,19 +100,19 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void loadDevices() {
-        apiService.getMyDevices().enqueue(new Callback<List<Device>>() {
+        apiService.getMyDevices().enqueue(new Callback<ApiResponse<List<Device>>>() {
             @Override
-            public void onResponse(Call<List<Device>> call, Response<List<Device>> response) {
+            public void onResponse(Call<ApiResponse<List<Device>>> call, Response<ApiResponse<List<Device>>> response) {
                 if (textViewWelcome == null) return;
 
-                if (response.isSuccessful() && response.body() != null) {
-                    int count = response.body().size();
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    int count = response.body().getData().size();
                     textViewWelcome.append("\n" + String.format(getString(R.string.connected_devices), count));
                 }
             }
 
             @Override
-            public void onFailure(Call<List<Device>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<List<Device>>> call, Throwable t) {
                 // Sessizce geç
             }
         });
