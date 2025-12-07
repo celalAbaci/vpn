@@ -21,4 +21,7 @@ public interface UserConnectionLogRepository extends JpaRepository<UserConnectio
     // YENİ EKLENDİ: Kullanılan toplam datayı hesaplar
     @Query("SELECT SUM(log.dataUsedMb) FROM UserConnectionLog log")
     BigDecimal findTotalDataUsedMb();
+
+    @Query("SELECT SUM(l.dataUsedMb) FROM UserConnectionLog l WHERE l.device.id = :deviceId")
+    BigDecimal sumDataUsedMbByDeviceId(Long deviceId);
 }

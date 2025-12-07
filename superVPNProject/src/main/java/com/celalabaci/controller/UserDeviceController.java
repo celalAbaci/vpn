@@ -39,6 +39,12 @@ public class UserDeviceController {
         return new ResponseEntity<>(ApiResponse.success("Device registered successfully.", newDevice), HttpStatus.CREATED);
     }
 
+    @PostMapping("/guest")
+    public ResponseEntity<ApiResponse<UserDeviceDto>> registerGuestDevice(@Valid @RequestBody UserDeviceCreateDto dto) {
+        UserDeviceDto newDevice = userDeviceService.registerMyDevice(dto, null);
+        return new ResponseEntity<>(ApiResponse.success("Guest device registered successfully.", newDevice), HttpStatus.CREATED);
+    }
+
     @PutMapping("/my/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserDeviceDto>> updateMyDevice(@PathVariable Long id, @Valid @RequestBody UserDeviceUpdateDto dto, @AuthenticationPrincipal User currentUser) {

@@ -30,14 +30,18 @@ public class AuthInterceptor implements Interceptor {
         String token = RetrofitClient.getToken(context);
 
         // Eğer token varsa ve istek "auth" endpoint'i DEĞİLSE, başlığı ekle
+        Request.Builder requestBuilder = originalRequest.newBuilder();
+
         if (token != null && !originalRequest.url().encodedPath().contains("/api/v1/auth/")) {
-            Request newRequest = originalRequest.newBuilder()
-                    .header("Authorization", "Bearer " + token)
-                    .build();
-            return chain.proceed(newRequest);
+            requestBuilder.header("Authorization", "Bearer " + token);
         }
 
-        // Token yoksa veya auth isteğiyse, orijinal isteği devam ettir
-        return chain.proceed(originalRequest);
+        // Add Device ID header if available
+        String deviceId = com.abacicelal.supervpn_project.utils.DeviceIdManager.getDeviceId(context);
+        if (deviceId != null) {
+            requestBuilder.header("X-Device-ID", deviceId);
+        }
+
+        return chain.proceed(requestBuilder.build());
     }
 }

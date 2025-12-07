@@ -14,7 +14,7 @@ import java.time.OffsetDateTime;
 public class UserDevice extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
     @Column(name = "device_name", nullable = false, length = 100)

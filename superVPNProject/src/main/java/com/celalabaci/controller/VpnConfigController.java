@@ -31,10 +31,15 @@ public class VpnConfigController {
      * göndermesi yeterlidir.)
      */
     @PostMapping("/generate")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<VpnConfigResponse>> generateConfiguration(
             @Valid @RequestBody VpnConfigGenerationRequest request,
             @AuthenticationPrincipal User currentUser) {
+
+        // Guest logic: if no user but deviceId is present
+        if (currentUser == null && request.getDeviceId() != null) {
+             VpnConfigResponse response = vpnConfigService.generateConfig(request, null);
+             return ResponseEntity.ok(ApiResponse.success("Misafir konfigürasyon başarıyla oluşturuldu.", response));
+        }
 
         // VpnConfigServiceImpl.generateConfig metodu artık
         // request.getExitServerId() kontrolünü yapmaktadır.

@@ -4,6 +4,9 @@ package com.abacicelal.supervpn_project.remote;
 import com.abacicelal.supervpn_project.remote.model.*;
 
 import java.util.List;
+import retrofit2.http.POST;
+import retrofit2.http.Body;
+import retrofit2.http.GET;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
