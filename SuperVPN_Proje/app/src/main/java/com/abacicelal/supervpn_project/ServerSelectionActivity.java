@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.abacicelal.supervpn_project.remote.ApiService;
 import com.abacicelal.supervpn_project.remote.RetrofitClient;
+import com.abacicelal.supervpn_project.remote.model.ApiResponse;
 import com.abacicelal.supervpn_project.remote.model.Server;
 
 import java.util.ArrayList;
@@ -82,17 +83,22 @@ public class ServerSelectionActivity extends AppCompatActivity {
         loadingBar.setVisibility(View.VISIBLE);
         serverRecyclerView.setVisibility(View.GONE);
 
-        apiService.getActiveServers().enqueue(new Callback<List<Server>>() {
+        apiService.getActiveServers().enqueue(new Callback<ApiResponse<List<Server>>>() {
             @Override
-            public void onResponse(Call<List<Server>> call, Response<List<Server>> response) {
+            public void onResponse(Call<ApiResponse<List<Server>>> call, Response<ApiResponse<List<Server>>> response) {
                 loadingBar.setVisibility(View.GONE);
                 serverRecyclerView.setVisibility(View.VISIBLE);
 
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.d(TAG, response.body().size() + " adet sunucu başarıyla çekildi.");
-                    serverList.clear();
-                    serverList.addAll(response.body());
-                    serverAdapter.notifyDataSetChanged();
+                    if (response.body().isSuccess() && response.body().getData() != null) {
+                        Log.d(TAG, response.body().getData().size() + " adet sunucu başarıyla çekildi.");
+                        serverList.clear();
+                        serverList.addAll(response.body().getData());
+                        serverAdapter.notifyDataSetChanged();
+                    } else {
+                        Log.e(TAG, "Sunucu yanıtı başarısız: " + response.body().getMessage());
+                        Toast.makeText(ServerSelectionActivity.this, "Sunucu hatası: " + response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     // 401 (Yetkisiz) veya 500 (Sunucu Hatası) gibi durumlarda burası çalışır
                     Log.e(TAG, "Sunucular çekilemedi. Hata kodu: " + response.code());
@@ -101,7 +107,7 @@ public class ServerSelectionActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<Server>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<List<Server>>> call, Throwable t) {
                 loadingBar.setVisibility(View.GONE);
                 // SSL Hatası veya İnternet Yoksa burası çalışır
                 Log.e(TAG, "Sunucu çekme hatası (onFailure): ", t);

@@ -5,7 +5,6 @@ import com.abacicelal.supervpn_project.remote.model.*;
 
 import java.util.List;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -13,7 +12,6 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
-import retrofit2.http.Query;
 
 /**
  * PDF dökümanındaki tüm API endpoint'lerinin tanımlandığı arayüz.
@@ -22,6 +20,7 @@ import retrofit2.http.Query;
 public interface ApiService {
 
     // --- 1. Kimlik Doğrulaması (Token GEREKMEZ) ---
+    // NOT: AuthenticationController direkt nesne döndürüyor, ApiResponse KULLANMIYOR.
 
     @POST("api/v1/auth/register")
     Call<AuthResponse> registerUser(@Body RegisterRequest registerRequest);
@@ -33,6 +32,7 @@ public interface ApiService {
     Call<AuthResponse> refreshToken(@Body RefreshTokenRequest refreshTokenRequest);
 
     // --- 2. Kimlik Doğrulaması GEREKEN İstekler (USER Rolü) ---
+    // NOT: Diğer Controller'lar ApiResponse wrapper kullanıyor.
 
     // Kullanıcı, Cihaz ve Durum İşlemleri
     @GET("api/v1/user/heartbeat")
@@ -51,8 +51,11 @@ public interface ApiService {
     Call<Void> deleteDevice(@Path("id") Long deviceId);
 
     // Sunucu (Server) ve Konfigürasyon İşlemleri
+    // DÜZELTME: Sadece getActiveServers metodunu wrapper ile güncelledik.
+    // Diğer metodlar da backend tarafında wrapper kullanıyorsa güncellenmelidir,
+    // ancak şu anlık derleme hatası almamak için sadece bu metodu değiştiriyoruz.
     @GET("api/v1/servers/active")
-    Call<List<Server>> getActiveServers();
+    Call<ApiResponse<List<Server>>> getActiveServers();
 
     @GET("api/v1/servers/{id}")
     Call<Server> getServerDetails(@Path("id") Long serverId);
