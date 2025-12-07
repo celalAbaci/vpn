@@ -3,6 +3,7 @@ package com.celalabaci.service.impl;
 import com.celalabaci.dto.subscription.AdminSubscriptionUpdateDto;
 import com.celalabaci.dto.subscription.SubscriptionCreateDto;
 import com.celalabaci.dto.subscription.SubscriptionDto;
+import com.celalabaci.entity.Role;
 import com.celalabaci.entity.Subscription;
 import com.celalabaci.entity.SubscriptionPlan;
 import com.celalabaci.entity.User;
@@ -34,9 +35,27 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
     @Override
     @Transactional(readOnly = true)
     public List<SubscriptionDto> getMySubscriptions(User currentUser) {
-        return subscriptionRepository.findByUserId(currentUser.getId()).stream()
+        List<SubscriptionDto> subscriptions = subscriptionRepository.findByUserId(currentUser.getId()).stream()
                 .map(subscriptionMapper::toDto)
                 .collect(Collectors.toList());
+
+        // Check for PREMIUM or ADMIN role and add a virtual active subscription if needed
+        if ((currentUser.getRole() == Role.PREMIUM || currentUser.getRole() == Role.ADMIN) &&
+                subscriptions.stream().noneMatch(SubscriptionDto::isActive)) {
+
+            SubscriptionDto virtualSub = new SubscriptionDto();
+            virtualSub.setId(-1L); // Virtual ID
+            virtualSub.setActive(true);
+            virtualSub.setStartDate(LocalDate.now());
+            virtualSub.setEndDate(LocalDate.now().plusYears(100)); // Unlimited
+            virtualSub.setSpeedLimitMbps(1000); // High speed
+            // Since we don't have a plan entity, we leave plan/user fields null or basic
+            // The Android app checks isActive() primarily.
+
+            subscriptions.add(virtualSub);
+        }
+
+        return subscriptions;
     }
 
     /**

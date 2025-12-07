@@ -14,5 +14,6 @@ public class UserDto {
     private String email;
     private Role role;
     private OffsetDateTime createdAt;
+    private boolean isPremium;
 }
 
