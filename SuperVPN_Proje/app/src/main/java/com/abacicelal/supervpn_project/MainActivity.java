@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void bindOpenVPNService() {
         Intent intent = new Intent("de.blinkt.openvpn.api.IOpenVPNAPIService");
-        intent.setPackage("de.blinkt.openvpn");
+        intent.setPackage(getPackageName());
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 
