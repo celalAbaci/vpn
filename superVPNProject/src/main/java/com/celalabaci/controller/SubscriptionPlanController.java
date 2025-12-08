@@ -21,14 +21,14 @@ public class SubscriptionPlanController {
     private ISubscriptionPlanService subscriptionPlanService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM')")
     public ResponseEntity<ApiResponse<List<SubscriptionPlanDto>>> getAllPlans() {
         List<SubscriptionPlanDto> plans = subscriptionPlanService.getAllPlans();
         return ResponseEntity.ok(ApiResponse.success(plans));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM')")
     public ResponseEntity<ApiResponse<SubscriptionPlanDto>> getPlanById(@PathVariable Long id) {
         SubscriptionPlanDto plan = subscriptionPlanService.getPlanById(id);
         return ResponseEntity.ok(ApiResponse.success(plan));

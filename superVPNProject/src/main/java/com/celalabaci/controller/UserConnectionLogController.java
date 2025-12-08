@@ -25,14 +25,14 @@ public class UserConnectionLogController {
     // --- USER Endpoints ---
 
     @GetMapping("/my")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<List<UserConnectionLogDto>>> getMyLogs(@AuthenticationPrincipal User currentUser) {
         List<UserConnectionLogDto> logs = logService.getMyConnectionLogs(currentUser);
         return ResponseEntity.ok(ApiResponse.success(logs));
     }
 
     @PostMapping("/my")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<UserConnectionLogDto>> createLog(@Valid @RequestBody UserConnectionLogCreateDto dto, @AuthenticationPrincipal User currentUser) {
         UserConnectionLogDto createdLog = logService.createConnectionLog(dto, currentUser);
         return new ResponseEntity<>(ApiResponse.success("Connection log created successfully.", createdLog), HttpStatus.CREATED);

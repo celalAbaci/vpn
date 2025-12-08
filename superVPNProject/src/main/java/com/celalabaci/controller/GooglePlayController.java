@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/payment/google")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('USER')") // Sadece giriş yapmış kullanıcılar doğrulama yapabilir
+@PreAuthorize("hasAnyRole('USER', 'PREMIUM')") // Sadece giriş yapmış kullanıcılar doğrulama yapabilir
 @ConditionalOnProperty(name = "google.play.enabled", havingValue = "true")
 public class GooglePlayController {
 

@@ -26,14 +26,14 @@ public class UserDeviceController {
     // --- USER Endpoints ---
 
     @GetMapping("/my")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<List<UserDeviceDto>>> getMyDevices(@AuthenticationPrincipal User currentUser) {
         List<UserDeviceDto> devices = userDeviceService.getMyDevices(currentUser);
         return ResponseEntity.ok(ApiResponse.success(devices));
     }
 
     @PostMapping("/my")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<UserDeviceDto>> registerMyDevice(@Valid @RequestBody UserDeviceCreateDto dto, @AuthenticationPrincipal User currentUser) {
         UserDeviceDto newDevice = userDeviceService.registerMyDevice(dto, currentUser);
         return new ResponseEntity<>(ApiResponse.success("Device registered successfully.", newDevice), HttpStatus.CREATED);
@@ -46,14 +46,14 @@ public class UserDeviceController {
     }
 
     @PutMapping("/my/{id}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<UserDeviceDto>> updateMyDevice(@PathVariable Long id, @Valid @RequestBody UserDeviceUpdateDto dto, @AuthenticationPrincipal User currentUser) {
         UserDeviceDto updatedDevice = userDeviceService.updateMyDevice(id, dto, currentUser);
         return ResponseEntity.ok(ApiResponse.success("Device updated successfully.", updatedDevice));
     }
 
     @DeleteMapping("/my/{id}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<Void>> deleteMyDevice(@PathVariable Long id, @AuthenticationPrincipal User currentUser) {
         userDeviceService.deleteMyDevice(id, currentUser);
         return ResponseEntity.ok(ApiResponse.success("Device deleted successfully.", null));

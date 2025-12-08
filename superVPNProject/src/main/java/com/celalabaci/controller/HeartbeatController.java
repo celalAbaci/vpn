@@ -34,7 +34,7 @@ public class HeartbeatController {
      * @return HeartbeatResponse DTO'sunu içeren bir ApiResponse.
      */
     @GetMapping("/heartbeat")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<HeartbeatResponse>> checkHeartbeat(
             @AuthenticationPrincipal User currentUser) {
 
