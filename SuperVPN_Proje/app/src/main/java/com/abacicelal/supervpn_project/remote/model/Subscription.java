@@ -26,7 +26,7 @@ public class Subscription {
     @SerializedName("speedLimitMbps")
     private Integer speedLimitMbps;
 
-    @SerializedName("isActive")
+    @SerializedName("active")
     private boolean isActive;
 
     // Getter
