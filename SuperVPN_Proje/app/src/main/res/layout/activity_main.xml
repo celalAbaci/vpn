@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1C1C1C">
+
+    <!-- Ana İçerik Alanı - Kaydırılabilir (Alt Çubuk kaldırıldığı için güncellendi) -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"> <!-- GÜNCELLEME: @id/bottomNavBar kaldırıldı -->
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Arka Plan Görseli -->
+            <ImageView
+                android:id="@+id/backgroundImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="16dp"
+                android:alpha="0.25"
+                android:contentDescription="Background"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_arka_plan"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Menü Butonu -->
+            <ImageButton
+                android:id="@+id/menuButton"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:adjustViewBounds="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/menu"
+                android:padding="4dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_menu_button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Sağ üst ikonlar -->
+            <LinearLayout
+                android:id="@+id/topButtons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageButton
+                    android:id="@+id/premiumButton"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:adjustViewBounds="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/premium"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_premium_button"
+                    app:tint="#FFFFFF" />
+
+                <ImageButton
+                    android:id="@+id/browserButton"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginStart="12dp"
+                    android:adjustViewBounds="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/browser"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    app:tint="#FFFFFF"
+                    android:src="@drawable/ic_tarayici_button" />
+
+                <ImageButton
+                    android:id="@+id/locationButton"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginStart="12dp"
+                    android:adjustViewBounds="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/location_selection"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    app:tint="#FFFFFF"
+                    android:src="@drawable/ic_location_button" />
+
+                <ImageButton
+                    android:id="@+id/helpButton"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginStart="12dp"
+                    android:adjustViewBounds="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/help"
+                    android:padding="4dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_bilgi_button" />
+            </LinearLayout>
+
+            <!-- Konum Başlığı -->
+            <TextView
+                android:id="@+id/locationText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="En Hızlı Konum"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/topButtons" />
+
+            <!-- Bağlantı Durumu Metinleri (Bağlandı / Artık Güvendesiniz) -->
+            <TextView
+                android:id="@+id/statusConnectedText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Bağlandı"
+                android:textColor="#00FF00"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/locationText" />
+
+            <TextView
+                android:id="@+id/statusSafeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Artık güvendesiniz"
+                android:textColor="#BBBBBB"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/statusConnectedText" />
+
+            <!-- Bağlantı Süresi Kutusu -->
+            <LinearLayout
+                android:id="@+id/connectionTimeLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp"
+                android:background="@drawable/bg_rounded_dark_green"
+                android:layout_marginTop="16dp"
+                android:gravity="center_vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/statusSafeText">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_time"
+                    app:tint="#00FF00"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Time Icon" />
+
+                <TextView
+                    android:id="@+id/connectionTimeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00"
+                    android:textColor="#00FF00"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Bağlantı süresi"
+                    android:textColor="#BBBBBB"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Yükleme Spinner -->
+            <ProgressBar
+                android:id="@+id/loadingSpinner"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:indeterminate="true"
+                android:indeterminateTint="#00BFFF"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/connectButton"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/connectButton" />
+
+            <!-- Bağlan Butonu -->
+            <ImageButton
+                android:id="@+id/connectButton"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_marginTop="32dp"
+                android:background="@drawable/btn_round"
+                android:contentDescription="Connect Button"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_power_button"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/connectionTimeLayout" />
+
+            <!-- Bağlantı Durumu Metni (Bağlan / Bağlantıyı Kes) -->
+            <TextView
+                android:id="@+id/connectionStatusLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="BAĞLAN"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/connectButton" />
+
+            <!-- Protokol seçenekleri -->
+            <HorizontalScrollView
+                android:id="@+id/protocolScroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/connectionStatusLabel">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/protocolAuto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="#2E2E2E"
+                        android:text="Auto"
+                        android:textColor="#FFFFFF" />
+
+                    <Button
+                        android:id="@+id/protocolIKEv2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="#2E2E2E"
+                        android:text="IKEv2"
+                        android:textColor="#FFFFFF" />
+
+                    <Button
+                        android:id="@+id/protocolSuper"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="#2E2E2E"
+                        android:text="Super"
+                        android:textColor="#FFFFFF" />
+
+                    <Button
+                        android:id="@+id/protocolOpenVPN"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="#2E2E2E"
+                        android:text="OpenVPN"
+                        android:textColor="#FFFFFF" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Sunucu seçimi -->
+            <LinearLayout
+                android:id="@+id/serverSelectionLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/bg_rounded_dark_gray"
+                android:padding="16dp"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginTop="24dp"
+                android:gravity="center_vertical"
+                app:layout_constraintTop_toBottomOf="@id/protocolScroll">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_location_button"
+                    app:tint="#FFFFFF"
+                    android:layout_marginEnd="16dp"
+                    android:contentDescription="Server Icon" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Sunucu"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_arrow_right"
+                    app:tint="#FFFFFF"
+                    android:contentDescription="Arrow Right" />
+            </LinearLayout>
+
+            <!-- Mevcut Sunucu Bilgisi (Geri Eklendi) -->
+            <TextView
+                android:id="@+id/currentServerInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Mevcut Sunucu : İngiltere - Londra"
+                android:textColor="#BBBBBB"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="@id/serverSelectionLayout"
+                app:layout_constraintTop_toBottomOf="@id/serverSelectionLayout" />
+
+            <TextView
+                android:id="@+id/currentProtocolInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Protokol : Otomatik"
+                android:textColor="#BBBBBB"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="@id/serverSelectionLayout"
+                app:layout_constraintTop_toBottomOf="@id/currentServerInfo" />
+
+
+            <!-- "Premium'a Geç" butonu -->
+            <Button
+                android:id="@+id/upgradePremiumButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Premium'a Geç"
+                android:textColor="#1C1C1C"
+                android:backgroundTint="#FFC107"
+                android:paddingVertical="12dp"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginTop="24dp"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:cornerRadius="10dp"
+                app:layout_constraintTop_toBottomOf="@id/currentProtocolInfo" />
+
+            <TextView
+                android:id="@+id/upgradePremiumHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Daha hızlı bağlantı, daha fazla ülke"
+                android:textColor="#BBBBBB"
+                android:textSize="14sp"
+                android:textAlignment="center"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="80dp"
+            app:layout_constraintTop_toBottomOf="@id/upgradePremiumButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" /> <!-- En alta sabitlendi (kaydırma için) -->
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Karanlık Alan -->
+    <View
+        android:id="@+id/dimBackground"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:background="#99000000"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Yan Menü (GÜNCELLENDİ) -->
+    <LinearLayout
+        android:id="@+id/sideMenu"
+        android:layout_width="280dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:background="#1E1E2F"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:translationX="-1000dp"
+        android:elevation="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Not: TextView'lere tıklanabilirlik (clickable) ve odaklanabilirlik (focusable) özellikleri eklendi. -->
+        <TextView android:id="@+id/menuAccount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hesabım"
+            android:textColor="#FFFFFF"
+            android:paddingVertical="12dp"
+            android:textSize="16sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+
+        <TextView android:id="@+id/menuSupport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Yardım desteği"
+            android:textColor="#FFFFFF"
+            android:paddingVertical="12dp"
+            android:textSize="16sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+
+        <TextView android:id="@+id/menuAlwaysOn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Her zaman açık VPN"
+            android:textColor="#FFFFFF"
+            android:paddingVertical="12dp"
+            android:textSize="16sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+
+        <TextView android:id="@+id/menuAbout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hakkımızda"
+            android:textColor="#FFFFFF"
+            android:paddingVertical="12dp"
+            android:textSize="16sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+
+        <!-- KALDIRILANLAR: Paylaş, Bölünmüş Tünel, Bize Puan Ver -->
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="8dp"
+            android:background="#444" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Bildirimlere izin ver"
+                android:textColor="#FFFFFF"
+                android:padding="8dp" />
+
+            <Switch
+                android:id="@+id/notificationSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- KALDIRILDI: Alt Navigasyon Çubuğu (sabit) -->
+    <!--
+    <LinearLayout
+        android:id="@+id/bottomNavBar"
+        ... >
+        ...
+    </LinearLayout>
+    -->
+
+</androidx.constraintlayout.widget.ConstraintLayout>
