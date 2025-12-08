@@ -22,7 +22,7 @@ public class PaymentController {
     // --- USER Endpoint ---
 
     @GetMapping("/my")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<List<PaymentDto>>> getMyPayments(@AuthenticationPrincipal User currentUser) {
         List<PaymentDto> payments = paymentService.getMyPayments(currentUser);
         return ResponseEntity.ok(ApiResponse.success(payments));

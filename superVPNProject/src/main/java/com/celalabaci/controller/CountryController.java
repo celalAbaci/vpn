@@ -21,14 +21,14 @@ public class CountryController {
     private ICountryService countryService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM')")
     public ResponseEntity<ApiResponse<List<CountryDto>>> getAllCountries() {
         List<CountryDto> countries = countryService.getAllCountries();
         return ResponseEntity.ok(ApiResponse.success(countries));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM')")
     public ResponseEntity<ApiResponse<CountryDto>> getCountryById(@PathVariable Long id) {
         CountryDto country = countryService.getCountryById(id);
         return ResponseEntity.ok(ApiResponse.success(country));

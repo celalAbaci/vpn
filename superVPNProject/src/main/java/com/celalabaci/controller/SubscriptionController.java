@@ -26,21 +26,21 @@ public class SubscriptionController {
     // --- USER Endpoints ---
 
     @GetMapping("/my")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<List<SubscriptionDto>>> getMySubscriptions(@AuthenticationPrincipal User currentUser) {
         List<SubscriptionDto> subscriptions = subscriptionService.getMySubscriptions(currentUser);
         return ResponseEntity.ok(ApiResponse.success(subscriptions));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<SubscriptionDto>> createMySubscription(@Valid @RequestBody SubscriptionCreateDto dto, @AuthenticationPrincipal User currentUser) {
         SubscriptionDto createdSubscription = subscriptionService.createMySubscription(dto, currentUser);
         return new ResponseEntity<>(ApiResponse.success("Subscription started successfully.", createdSubscription), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}/cancel")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'PREMIUM')")
     public ResponseEntity<ApiResponse<SubscriptionDto>> cancelMySubscription(@PathVariable Long id, @AuthenticationPrincipal User currentUser) {
         SubscriptionDto cancelledSubscription = subscriptionService.cancelMySubscription(id, currentUser);
         return ResponseEntity.ok(ApiResponse.success("Subscription cancelled successfully.", cancelledSubscription));

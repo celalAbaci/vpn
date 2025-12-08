@@ -23,7 +23,7 @@ public class AnnouncementController {
 
     // Herkesin erişebileceği endpoint
     @GetMapping
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM')")
     public ResponseEntity<ApiResponse<List<AnnouncementDto>>> getVisibleAnnouncements() {
         List<AnnouncementDto> announcements = announcementService.getAllVisibleAnnouncements();
         return ResponseEntity.ok(ApiResponse.success(announcements));
@@ -38,7 +38,7 @@ public class AnnouncementController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM')")
     public ResponseEntity<ApiResponse<AnnouncementDto>> getAnnouncementById(@PathVariable Long id) {
         AnnouncementDto announcement = announcementService.getAnnouncementById(id);
         return ResponseEntity.ok(ApiResponse.success(announcement));
