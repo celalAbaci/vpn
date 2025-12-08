@@ -81,19 +81,30 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             case OPENVPN:
                 AgentDTOs.OpenVpnCredentials ovpn = vpnApiAgentService.provisionOpenVpnUser(entryServer, currentUser, device);
 
-                // HATA DÜZELTMESİ: Tüm parçaları birleştirerek geçerli bir OVPN dosyası oluşturun
                 StringBuilder sb = new StringBuilder();
                 sb.append("client\n");
                 sb.append("dev tun\n");
-                sb.append("proto ").append(ovpn.getServerProtocol() != null ? ovpn.getServerProtocol() : "udp").append("\n");
+
+                // DÜZELTME 1: Protokolü küçük harfe çevirip garantiye alıyoruz.
+                // Eğer null ise ve port 443 ise tcp, değilse udp varsayıyoruz (veya db'yi düzeltin).
+                String protocol = ovpn.getServerProtocol() != null ? ovpn.getServerProtocol().toLowerCase() : "udp";
+                sb.append("proto ").append(protocol).append("\n");
+
                 sb.append("remote ").append(entryServer.getServerIpAddress()).append(" ").append(ovpn.getServerPort()).append("\n");
                 sb.append("resolv-retry infinite\n");
                 sb.append("nobind\n");
                 sb.append("persist-key\n");
                 sb.append("persist-tun\n");
                 sb.append("remote-cert-tls server\n");
-                sb.append("cipher AES-256-CBC\n"); // Sunucu ayarınıza göre değişebilir
-                sb.append("auth SHA512\n");        // Sunucu ayarınıza göre değişebilir
+
+                // DÜZELTME 2: 'cipher' satırı kaldırıldı (Otomatik anlaşma/Negotiation için).
+                // Eğer sunucu çok eskiyse ve illaki istiyorsa sadece o zaman ekleyin.
+
+                sb.append("auth SHA512\n");
+
+                // DÜZELTME 3: Çalışan config dosyasındaki DNS hatasını önleyen komut
+                sb.append("ignore-unknown-option block-outside-dns\n");
+
                 sb.append("verb 3\n");
 
                 // CA Sertifikası
@@ -105,20 +116,15 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 // Kullanıcı Özel Anahtarı
                 sb.append("<key>\n").append(ovpn.getUserKey()).append("\n</key>\n");
 
-                // TLS Auth/Crypt Anahtarı (varsa)
+                // TLS Crypt (Senin çalışan dosyan tls-crypt kullanıyor, tls-auth değil)
                 if (ovpn.getTlsAuthKey() != null && !ovpn.getTlsAuthKey().isEmpty()) {
-                    // tls-crypt mi tls-auth mu kullandığınız sunucuya bağlıdır, SQL örneğinizde tls-crypt var.
                     sb.append("<tls-crypt>\n").append(ovpn.getTlsAuthKey()).append("\n</tls-crypt>\n");
                 }
 
                 configContent = sb.toString();
 
-                // GUEST LIMITS for OpenVPN
+                // Guest hız limiti (Gerekirse)
                 if (currentUser == null) {
-                    // Inject speed limit (shaper)
-                    // 10 Mbps = 10485760 bits/sec approx. OpenVPN 'shaper' uses bytes.
-                    // 10 Mbits/s ~= 1.25 MB/s = 1250000 bytes.
-                    // shaper 1250000
                     configContent += "\nshaper 1250000\n";
                 }
                 break;
