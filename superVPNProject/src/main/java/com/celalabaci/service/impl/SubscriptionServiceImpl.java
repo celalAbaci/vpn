@@ -3,6 +3,7 @@ package com.celalabaci.service.impl;
 import com.celalabaci.dto.subscription.AdminSubscriptionUpdateDto;
 import com.celalabaci.dto.subscription.SubscriptionCreateDto;
 import com.celalabaci.dto.subscription.SubscriptionDto;
+import com.celalabaci.dto.subscriptionplan.SubscriptionPlanDto;
 import com.celalabaci.entity.Role;
 import com.celalabaci.entity.Subscription;
 import com.celalabaci.entity.SubscriptionPlan;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,8 +51,18 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
             virtualSub.setStartDate(LocalDate.now());
             virtualSub.setEndDate(LocalDate.now().plusYears(100)); // Unlimited
             virtualSub.setSpeedLimitMbps(1000); // High speed
-            // Since we don't have a plan entity, we leave plan/user fields null or basic
-            // The Android app checks isActive() primarily.
+
+            // Create a virtual plan to ensure client doesn't crash on null plan
+            SubscriptionPlanDto virtualPlan = new SubscriptionPlanDto();
+            virtualPlan.setId(-1L);
+            virtualPlan.setName("Premium Plan");
+            virtualPlan.setPrice(BigDecimal.ZERO);
+            virtualPlan.setDurationDays(36500);
+            virtualPlan.setSpeedLimitMbps(1000);
+            virtualPlan.setDeviceLimit(5);
+            virtualPlan.setDataLimitGb(99999);
+
+            virtualSub.setPlan(virtualPlan);
 
             subscriptions.add(virtualSub);
         }

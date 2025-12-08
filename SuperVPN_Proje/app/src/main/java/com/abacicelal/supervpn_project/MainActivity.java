@@ -324,18 +324,20 @@ public class MainActivity extends AppCompatActivity {
         apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    boolean hasActive = false;
+                // Handle success response even if data is null/empty
+                if (response.isSuccessful() && response.body() != null) {
+                    // Treat null data as empty list
                     List<Subscription> subs = response.body().getData();
+                    boolean hasActive = false;
                     if (subs != null) {
                         for (Subscription s : subs) {
-                            // Check for both isActive flag AND valid dates if needed, but isActive should suffice
                             if (s.isActive()) {
                                 hasActive = true;
                                 break;
                             }
                         }
                     }
+
                     if (hasActive) {
                         // Premium kullanıcı: Premium butonlarını gizle
                         if (premiumButton != null) premiumButton.setVisibility(View.GONE);
@@ -347,12 +349,14 @@ public class MainActivity extends AppCompatActivity {
                         if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.VISIBLE);
                          if (menuAccount != null) menuAccount.setText(getString(R.string.account_title) + " (Free)");
                     }
+                } else {
+                    Log.e(TAG, "Subscription check failed UI: Code=" + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<List<Subscription>>> call, Throwable t) {
-                // Hata durumunda UI'da değişiklik yapma, varsayılan kalsın
+                Log.e(TAG, "Subscription check network error UI", t);
             }
         });
     }
@@ -361,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
         apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                if (response.isSuccessful() && response.body() != null) {
                     boolean hasActive = false;
                     List<Subscription> subs = response.body().getData();
                     if (subs != null) {
@@ -384,7 +388,17 @@ public class MainActivity extends AppCompatActivity {
                         handleConnectionFailure(null);
                     }
                 } else {
-                    handleConnectionFailure(getString(R.string.error_subscription_check));
+                    String errorMsg = getString(R.string.error_subscription_check);
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMsg += " " + response.errorBody().string();
+                        } else {
+                            errorMsg += " Code: " + response.code();
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error body", e);
+                    }
+                    handleConnectionFailure(errorMsg);
                 }
             }
 
