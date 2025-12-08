@@ -80,7 +80,38 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
         switch (request.getProtocol()) {
             case OPENVPN:
                 AgentDTOs.OpenVpnCredentials ovpn = vpnApiAgentService.provisionOpenVpnUser(entryServer, currentUser, device);
-                configContent = ovpn.getUserCert(); // Full OVPN içeriği
+
+                // HATA DÜZELTMESİ: Tüm parçaları birleştirerek geçerli bir OVPN dosyası oluşturun
+                StringBuilder sb = new StringBuilder();
+                sb.append("client\n");
+                sb.append("dev tun\n");
+                sb.append("proto ").append(ovpn.getServerProtocol() != null ? ovpn.getServerProtocol() : "udp").append("\n");
+                sb.append("remote ").append(entryServer.getServerIpAddress()).append(" ").append(ovpn.getServerPort()).append("\n");
+                sb.append("resolv-retry infinite\n");
+                sb.append("nobind\n");
+                sb.append("persist-key\n");
+                sb.append("persist-tun\n");
+                sb.append("remote-cert-tls server\n");
+                sb.append("cipher AES-256-CBC\n"); // Sunucu ayarınıza göre değişebilir
+                sb.append("auth SHA512\n");        // Sunucu ayarınıza göre değişebilir
+                sb.append("verb 3\n");
+
+                // CA Sertifikası
+                sb.append("<ca>\n").append(ovpn.getCaCert()).append("\n</ca>\n");
+
+                // Kullanıcı Sertifikası
+                sb.append("<cert>\n").append(ovpn.getUserCert()).append("\n</cert>\n");
+
+                // Kullanıcı Özel Anahtarı
+                sb.append("<key>\n").append(ovpn.getUserKey()).append("\n</key>\n");
+
+                // TLS Auth/Crypt Anahtarı (varsa)
+                if (ovpn.getTlsAuthKey() != null && !ovpn.getTlsAuthKey().isEmpty()) {
+                    // tls-crypt mi tls-auth mu kullandığınız sunucuya bağlıdır, SQL örneğinizde tls-crypt var.
+                    sb.append("<tls-crypt>\n").append(ovpn.getTlsAuthKey()).append("\n</tls-crypt>\n");
+                }
+
+                configContent = sb.toString();
 
                 // GUEST LIMITS for OpenVPN
                 if (currentUser == null) {
