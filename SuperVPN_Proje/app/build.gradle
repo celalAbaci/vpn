@@ -49,6 +49,12 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
 
+    // Embedded OpenVPN Library - Using Jitpack to simulate the internal module structure as "internal"
+    // Since we cannot inject a full module here, we use the library that matches the AIDL interface.
+    // implementation project(':openvpn')
+    implementation 'com.github.schwabe:ics-openvpn:v0.7.62'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
