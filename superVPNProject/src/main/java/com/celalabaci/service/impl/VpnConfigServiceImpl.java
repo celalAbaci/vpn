@@ -85,6 +85,11 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 // We use it directly to avoid mismatch and malformed config issues.
                 configContent = ovpn.getUserCert();
 
+                // Ensure data-ciphers is present for modern OpenVPN versions (2.5+)
+                if (!configContent.contains("data-ciphers")) {
+                    configContent += "\ndata-ciphers AES-256-GCM:AES-128-GCM:AES-256-CBC\n";
+                }
+
                 // Guest speed limit (shaper)
                 if (currentUser == null) {
                     configContent += "\nshaper 1250000\n";

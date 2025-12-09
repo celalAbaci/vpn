@@ -429,6 +429,10 @@ public class MainActivity extends AppCompatActivity {
                     String protocol = configResponse.getProtocol();
 
                     Log.i(TAG, "Config alındı. Protokol: " + protocol);
+                    // Log config content for debugging line break issues
+                    if (configContent != null) {
+                         Log.d(TAG, "Config Content:\n" + configContent);
+                    }
 
                     if ("OPENVPN".equalsIgnoreCase(protocol)) {
                         startOpenVpn(configContent);
