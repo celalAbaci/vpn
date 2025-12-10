@@ -57,8 +57,8 @@ public class OpenVpnProvisioningStrategy implements VpnProvisioningStrategy {
                     configContent, // FULL CONFIG
                     "", // Key embedded
                     "", // TLS embedded
-                    "udp",
-                    1194
+                    "tcp",
+                    443
             );
         } catch (Exception e) {
             log.error("OpenVPN Error: {}", e.getMessage());
