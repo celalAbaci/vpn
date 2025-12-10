@@ -508,7 +508,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     }
 
     private void startEmbeddedVpn(VpnProfile vp) {
-        VPNLaunchHelper.startOpenVpn(vp, this);
+        VPNLaunchHelper.startOpenVpn(vp, this, "VPN_CONNECT", false);
         // Clean pending config
         mPendingConfig = null;
     }
