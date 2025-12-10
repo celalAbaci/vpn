@@ -81,52 +81,25 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             case OPENVPN:
                 AgentDTOs.OpenVpnCredentials ovpn = vpnApiAgentService.provisionOpenVpnUser(entryServer, currentUser, device);
 
-                StringBuilder sb = new StringBuilder();
-                sb.append("client\n");
-                sb.append("dev tun\n");
+                // Start with the raw config from the server
+                String rawConfig = ovpn.getUserCert();
 
-                // DÜZELTME 1: Protokolü küçük harfe çevirip garantiye alıyoruz.
-                // Eğer null ise ve port 443 ise tcp, değilse udp varsayıyoruz (veya db'yi düzeltin).
-                String protocol = ovpn.getServerProtocol() != null ? ovpn.getServerProtocol().toLowerCase() : "udp";
-                sb.append("proto ").append(protocol).append("\n");
+                StringBuilder sb = new StringBuilder(rawConfig);
 
-                sb.append("remote ").append(entryServer.getServerIpAddress()).append(" ").append(ovpn.getServerPort()).append("\n");
-                sb.append("resolv-retry infinite\n");
-                sb.append("nobind\n");
-                sb.append("persist-key\n");
-                sb.append("persist-tun\n");
-                sb.append("remote-cert-tls server\n");
-
-                // DÜZELTME 2: 'cipher' satırı kaldırıldı (Otomatik anlaşma/Negotiation için).
-                // Eğer sunucu çok eskiyse ve illaki istiyorsa sadece o zaman ekleyin.
-
-                sb.append("auth SHA512\n");
-
-                // DÜZELTME 3: Çalışan config dosyasındaki DNS hatasını önleyen komut
-                sb.append("ignore-unknown-option block-outside-dns\n");
-
-                sb.append("verb 3\n");
-
-                // CA Sertifikası
-                sb.append("<ca>\n").append(ovpn.getCaCert()).append("\n</ca>\n");
-
-                // Kullanıcı Sertifikası
-                sb.append("<cert>\n").append(ovpn.getUserCert()).append("\n</cert>\n");
-
-                // Kullanıcı Özel Anahtarı
-                sb.append("<key>\n").append(ovpn.getUserKey()).append("\n</key>\n");
-
-                // TLS Crypt (Senin çalışan dosyan tls-crypt kullanıyor, tls-auth değil)
-                if (ovpn.getTlsAuthKey() != null && !ovpn.getTlsAuthKey().isEmpty()) {
-                    sb.append("<tls-crypt>\n").append(ovpn.getTlsAuthKey()).append("\n</tls-crypt>\n");
+                // Ensure there is a newline before appending
+                if (!rawConfig.endsWith("\n")) {
+                    sb.append("\n");
                 }
 
-                configContent = sb.toString();
+                // Add extra options that might be missing or needed
+                sb.append("ignore-unknown-option block-outside-dns\n");
 
                 // Guest hız limiti (Gerekirse)
                 if (currentUser == null) {
-                    configContent += "\nshaper 1250000\n";
+                    sb.append("shaper 1250000\n");
                 }
+
+                configContent = sb.toString();
                 break;
 
             case IKEV2:
