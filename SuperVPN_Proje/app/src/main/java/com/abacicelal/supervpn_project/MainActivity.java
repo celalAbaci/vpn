@@ -42,12 +42,13 @@ import com.abacicelal.supervpn_project.utils.DeviceIdManager;
 import java.io.StringReader;
 import java.util.List;
 
-// OpenVPN Core Imports for Embedded Use
+// OpenVPN Core Imports
 import de.blinkt.openvpn.VpnProfile;
 import de.blinkt.openvpn.core.ConfigParser;
 import de.blinkt.openvpn.core.ProfileManager;
 import de.blinkt.openvpn.core.VPNLaunchHelper;
 import de.blinkt.openvpn.core.VpnStatus;
+import de.blinkt.openvpn.core.ConnectionStatus;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -167,20 +168,31 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
      * VpnStatus.StateListener Implementation
      */
     @Override
-    public void updateState(String state, String logmessage, int localizedResId, VpnStatus.ConnectionStatus level) {
+    public void updateState(String state, String logmessage, int localizedResId, ConnectionStatus level, Intent intent) {
         runOnUiThread(() -> {
             Log.d(TAG, "VPN Status: " + state + " - " + logmessage);
 
-            if (level == VpnStatus.ConnectionStatus.LEVEL_CONNECTED) {
-                if (!isConnected) simulateConnectionSuccess();
-            } else if (level == VpnStatus.ConnectionStatus.LEVEL_NOTCONNECTED ||
-                       level == VpnStatus.ConnectionStatus.LEVEL_AUTH_FAILED) {
-                if (isConnected || isConnecting) disconnectVPN();
-            } else if (level == VpnStatus.ConnectionStatus.LEVEL_CONNECTING_NO_SERVER_REPLY_YET ||
-                       level == VpnStatus.ConnectionStatus.LEVEL_CONNECTING_SERVER_REPLIED ||
-                       level == VpnStatus.ConnectionStatus.LEVEL_WAITING_FOR_USER_INPUT) {
-                 isConnecting = true;
-                 updateUIOnConnectionState();
+            switch (level) {
+                case LEVEL_CONNECTED:
+                    if (!isConnected) {
+                        handleConnectionSuccess();
+                    }
+                    break;
+
+                case LEVEL_NOTCONNECTED:
+                case LEVEL_AUTH_FAILED:
+                case LEVEL_NONETWORK:
+                    if (isConnected || isConnecting) {
+                        handleConnectionDisconnected();
+                    }
+                    break;
+
+                case LEVEL_CONNECTING_NO_SERVER_REPLY_YET:
+                case LEVEL_CONNECTING_SERVER_REPLIED:
+                case LEVEL_WAITING_FOR_USER_INPUT:
+                    isConnecting = true;
+                    updateUIOnConnectionState();
+                    break;
             }
         });
     }
@@ -551,7 +563,8 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             }
 
             Toast.makeText(this, String.format(getString(R.string.ikev2_prepared), serverAddr), Toast.LENGTH_SHORT).show();
-            simulateConnectionSuccess();
+            // Use common handler, effectively simulating success for external process
+            handleConnectionSuccess();
 
         } catch (Exception e) {
             Log.e(TAG, "IKEv2 Error", e);
@@ -573,7 +586,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.v2ray.ang");
             if (launchIntent != null) {
                 startActivity(launchIntent);
-                simulateConnectionSuccess();
+                handleConnectionSuccess();
             } else {
                 Toast.makeText(this, getString(R.string.v2ray_not_installed), Toast.LENGTH_LONG).show();
                 try {
@@ -598,7 +611,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             clipboard.setPrimaryClip(clip);
 
             Toast.makeText(this, getString(R.string.super_config_copied), Toast.LENGTH_SHORT).show();
-            simulateConnectionSuccess();
+            handleConnectionSuccess();
         } catch (Exception e) {
             handleConnectionFailure(String.format(getString(R.string.super_error), e.getMessage()));
         }
@@ -607,53 +620,41 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     private void disconnectVPN() {
         // Embedded OpenVPN Disconnect
         if (selectedProtocol == VpnProtocol.OPENVPN) {
-             // Use internal Intent to stop the service or VpnStatus
-             Intent intent = new Intent(this, de.blinkt.openvpn.core.OpenVPNService.class);
-             intent.setAction(de.blinkt.openvpn.core.OpenVPNService.START_SERVICE);
-             // Usually sending a stop intent or just unbinding is not enough for the library
-             // But ProfileManager or OpenVPNThread manages it.
-             // Standard way:
-             // OpenVPNService.endVpnService(this); // Static method if available, or just send intent.
-             // Looking at source, simply calling OpenVPNThread.stop() is internal.
-             // We can assume sending a disconnect action if implemented, or simply stopService.
-
-             // However, ics-openvpn listens for a specific intent or we can use the management interface.
-             // The simplest way to stop it:
-             // ProfileManager.setConntectedVpnProfileDisconnected(this);
-             // And/Or
-             // stopService(new Intent(this, OpenVPNService.class));
-
              try {
-                // If we imported OpenVPNService, we can try to find a stop method, but often it's managed via intent
-                // or just standard stopService for a started service.
-                stopService(new Intent(this, de.blinkt.openvpn.core.OpenVPNService.class));
+                // Sending stop service intent to OpenVPNService
+                Intent intent = new Intent(this, de.blinkt.openvpn.core.OpenVPNService.class);
+                stopService(intent);
              } catch (Exception e) {
                  Log.e(TAG, "Error stopping VPN service", e);
              }
         }
 
-        isConnecting = false;
-        isConnected = false;
-        stopTimer();
-        sharedPreferences.edit().remove(KEY_START_TIME).apply();
-        updateUIOnConnectionState();
+        handleConnectionDisconnected();
         Toast.makeText(this, getString(R.string.vpn_disconnected), Toast.LENGTH_SHORT).show();
     }
 
     private void handleConnectionFailure(String message) {
         if (message != null) Log.e(TAG, message);
-        isConnecting = false;
-        isConnected = false;
-        updateUIOnConnectionState();
+        handleConnectionDisconnected();
         if (message != null) Toast.makeText(this, getString(R.string.connection_failed), Toast.LENGTH_SHORT).show();
     }
 
-    private void simulateConnectionSuccess() {
+    // Renamed from simulateConnectionSuccess to handleConnectionSuccess
+    private void handleConnectionSuccess() {
         isConnected = true;
         isConnecting = false;
         startTime = System.currentTimeMillis();
         sharedPreferences.edit().putLong(KEY_START_TIME, startTime).apply();
         startTimer();
+        updateUIOnConnectionState();
+    }
+
+    // New helper to centralize disconnection UI logic
+    private void handleConnectionDisconnected() {
+        isConnecting = false;
+        isConnected = false;
+        stopTimer();
+        sharedPreferences.edit().remove(KEY_START_TIME).apply();
         updateUIOnConnectionState();
     }
 
