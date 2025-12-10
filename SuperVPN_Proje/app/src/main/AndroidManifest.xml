@@ -39,7 +39,13 @@
         <activity android:name=".RegisterActivity" />
         <activity android:name=".AlwaysOnVpnActivity" />
 
-        <!-- OpenVPN Service from Library -->
+        <!-- OpenVPN Service Embedded Configuration -->
+        <!--
+             process=":openvpn" is often used to run VPN in a separate process,
+             but if we want simple embedding, we can remove it or keep it.
+             ics-openvpn generally recommends a separate process.
+             We configure it to serve our package.
+        -->
         <service
             android:name="de.blinkt.openvpn.core.OpenVPNService"
             android:permission="android.permission.BIND_VPN_SERVICE"
@@ -49,11 +55,12 @@
             </intent-filter>
         </service>
 
-        <!-- Necessary activities for the library if it exposes them,
-             but kaikelmax usually uses its own or standard ones.
-             If the library re-uses de.blinkt namespace (which it often does as a fork),
-             we keep the service declaration. kaikelmax library uses de.blinkt.openvpn.core.OpenVPNService internally.
-        -->
+        <activity
+             android:name="de.blinkt.openvpn.DisconnectVPN"
+             android:excludeFromRecents="true"
+             android:noHistory="true"
+             android:taskAffinity=".DisconnectVPN"
+             android:theme="@style/blinkt.dialog" />
 
     </application>
 </manifest>
