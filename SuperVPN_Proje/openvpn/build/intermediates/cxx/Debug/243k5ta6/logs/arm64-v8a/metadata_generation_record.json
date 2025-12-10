@@ -1,0 +1,41 @@
+[
+  {
+    "level_": 0,
+    "message_": "Start JSON generation. Platform version: 21 min SDK version: arm64-v8a",
+    "file_": "C:\\Users\\asusgaming\\OneDrive\\Desktop\\BBBF\\AndroidStudioProjects\\StudioProjects\\SuperVPN_Proje\\openvpn\\src\\main\\cpp\\CMakeLists.txt",
+    "tag_": "skeletonOvpn2Debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "JSON \u0027C:\\Users\\asusgaming\\OneDrive\\Desktop\\BBBF\\AndroidStudioProjects\\StudioProjects\\SuperVPN_Proje\\openvpn\\.cxx\\Debug\\243k5ta6\\arm64-v8a\\android_gradle_build.json\u0027 was up-to-date",
+    "file_": "C:\\Users\\asusgaming\\OneDrive\\Desktop\\BBBF\\AndroidStudioProjects\\StudioProjects\\SuperVPN_Proje\\openvpn\\src\\main\\cpp\\CMakeLists.txt",
+    "tag_": "skeletonOvpn2Debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "JSON generation completed without problems",
+    "file_": "C:\\Users\\asusgaming\\OneDrive\\Desktop\\BBBF\\AndroidStudioProjects\\StudioProjects\\SuperVPN_Proje\\openvpn\\src\\main\\cpp\\CMakeLists.txt",
+    "tag_": "skeletonOvpn2Debug|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  }
+]
