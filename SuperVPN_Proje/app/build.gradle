@@ -15,7 +15,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        missingDimensionStrategy 'implementation', 'skeleton'
+        missingDimensionStrategy 'implementation', 'ui'
         missingDimensionStrategy 'ovpnimpl', 'ovpn23'
     }
 
