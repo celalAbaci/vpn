@@ -503,7 +503,8 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
 
         } catch (Exception e) {
             Log.e(TAG, "OpenVPN Config Error", e);
-            handleConnectionFailure(String.format(getString(R.string.openvpn_error), e.getMessage()));
+            Toast.makeText(this, "OpenVPN Başlatma Hatası: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            handleConnectionFailure("Ayar Hatası: " + e.getMessage());
         }
     }
 
