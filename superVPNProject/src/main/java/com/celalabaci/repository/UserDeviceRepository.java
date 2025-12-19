@@ -33,4 +33,11 @@ public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
      * @return An Optional containing the device if found and owned by the user.
      */
     Optional<UserDevice> findByIdAndUserId(Long id, Long userId);
+
+    /**
+     * Finds a device by its unique device ID.
+     * @param uniqueDeviceId The unique ID of the device.
+     * @return An Optional containing the device if found.
+     */
+    Optional<UserDevice> findByUniqueDeviceId(String uniqueDeviceId);
 }
