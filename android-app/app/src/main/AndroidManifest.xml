@@ -1,0 +1,68 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.abacicelal.supervpn_project">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+
+    <application
+        android:allowBackup="true"
+        android:fullBackupContent="false"
+        android:label="SuperVPN"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SuperVPN_Project"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".MainActivity" />
+        <activity android:name=".ServerSelectionActivity" />
+        <activity android:name=".LanguageSelectionActivity" />
+        <activity android:name=".PremiumActivity" />
+        <activity android:name=".HelpSupportActivity" />
+        <activity android:name=".AboutActivity" />
+        <activity android:name=".UserProfileActivity" />
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".BrowserActivity" />
+        <activity android:name=".AccountActivity" />
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".RegisterActivity" />
+        <activity android:name=".AlwaysOnVpnActivity" />
+
+        <!-- OpenVPN Service Embedded Configuration -->
+        <!--
+             process=":openvpn" is often used to run VPN in a separate process,
+             but if we want simple embedding, we can remove it or keep it.
+             ics-openvpn generally recommends a separate process.
+             We configure it to serve our package.
+        -->
+        <service
+            android:name="de.blinkt.openvpn.core.OpenVPNService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:process=":openvpn"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+
+        <activity
+             android:name="de.blinkt.openvpn.DisconnectVPN"
+             android:excludeFromRecents="true"
+             android:noHistory="true"
+             android:taskAffinity=".DisconnectVPN"
+             android:theme="@style/blinkt.dialog" />
+
+    </application>
+</manifest>
