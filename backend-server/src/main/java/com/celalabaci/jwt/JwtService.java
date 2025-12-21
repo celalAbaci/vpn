@@ -56,7 +56,8 @@ public class JwtService {
 
     public String generateGuestToken(String deviceId) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("authorities", java.util.List.of("ROLE_USER")); // Guests are treated as basic users restricted by logic
+        // Guests are treated as basic users restricted by logic
+        claims.put("authorities", java.util.List.of("ROLE_USER"));
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject("GUEST_" + deviceId)

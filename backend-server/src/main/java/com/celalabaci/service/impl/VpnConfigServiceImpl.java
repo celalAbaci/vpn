@@ -43,34 +43,14 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             }
         }
 
-        // For guest, device might not be in DB or associated with User.
-        // We need to fetch or create a placeholder device logic if strictly required by Agent Service.
-        // But the previous analysis showed UserDevice requires User (nullable now).
-        // If deviceId passed is just a random Long, it might fail.
-        // For Guest, we might need to skip device lookup or look it up without user check.
-
         UserDevice device = null;
         if (currentUser != null) {
              device = userDeviceRepository.findById(request.getDeviceId())
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Cihaz bulunamadı"));
         } else {
-             // Guest logic: Create a transient device object or handle in agent
-             // Since Agent Service methods require device, we need to adapt.
-             // We can check if device exists by ID, if not found and user is null, maybe create temporary?
-             // Or rely on ID passed.
-             // Since we modified UserDevice.user to be nullable, we can try to find it.
+             // Guest Logic
              device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
              if (device == null) {
-                 // Register a temporary guest device entry
-                 device = new UserDevice();
-                 device.setDeviceName("Guest Device");
-                 device.setUser(null);
-                 // We need to save it to get an ID if needed, but ID is passed in request?
-                 // Wait, request.getDeviceId() is the ID in DB.
-                 // If the Android app generates a random ID, it won't exist in DB.
-                 // The Android app should probably Register the device first even for Guest.
-                 // But for now let's assume valid ID or return error.
-                 // For now, let's create a dummy wrapper if null, but this might fail Hibernate.
                  throw new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Misafir cihaz kaydı bulunamadı. Lütfen önce cihazı kaydedin.");
              }
         }
@@ -95,8 +75,11 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 sb.append("ignore-unknown-option block-outside-dns\n");
 
                 // Guest hız limiti (Gerekirse)
+                // 16Mbps approx (16*1000*1000 bits / 8 = 2000000 bytes)
+                // Ancak OpenVPN 'shaper' byte/sec cinsinden çalışır.
+                // 16 Mbit = ~2 MB/s = 2097152 bytes. 2000000 olarak bırakalım.
                 if (currentUser == null) {
-                    sb.append("shaper 2000000\n"); // 16Mbps approx (16*10^6 / 8 bytes)
+                     sb.append("shaper 2000000\n");
                 }
 
                 configContent = sb.toString();

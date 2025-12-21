@@ -34,11 +34,7 @@ public class GuestAuthController {
             deviceRepository.save(device);
         }
 
-        // Generate Token (Assuming JwtService can handle non-user subjects or we create a dummy user context)
-        // For simplicity here, we might need to adjust JwtService to accept a subject and extra claims
-        // representing a GUEST role.
         String token = jwtService.generateGuestToken(device.getUniqueDeviceId());
-
         return ResponseEntity.ok(token);
     }
 }
