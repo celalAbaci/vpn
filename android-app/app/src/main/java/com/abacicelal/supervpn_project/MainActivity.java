@@ -276,27 +276,43 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     private void startVPNConnection() {
         Log.d(TAG, "VPN Bağlantısı Başlatılıyor...");
 
-        // GUEST MODE logic: Token can be null now.
-        String token = RetrofitClient.getToken(this);
-
         isConnecting = true;
         updateUIOnConnectionState();
-        fetchDeviceAndCheckSubscription();
+
+        // Guest login or Registered login logic
+        if (RetrofitClient.getToken(this) == null) {
+            handleGuestConnection();
+        } else {
+            fetchDeviceAndCheckSubscription();
+        }
+    }
+
+    private void handleGuestConnection() {
+        String uniqueId = DeviceIdManager.getDeviceId(this);
+
+        apiService.guestLogin(uniqueId).enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                 if (response.isSuccessful() && response.body() != null) {
+                     // Store the Guest JWT token. RetrofitClient will pick this up for subsequent requests.
+                     getSharedPreferences("VPN_PREFS", MODE_PRIVATE).edit()
+                         .putString("auth_token", response.body()).apply();
+
+                     // Proceed to fetch the assigned device ID and configuration
+                     fetchDeviceAndCheckSubscription();
+                 } else {
+                     handleConnectionFailure(getString(R.string.connection_failed) + " (Guest Auth Error: " + response.code() + ")");
+                 }
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                handleConnectionFailure("Guest Login Network Error");
+            }
+        });
     }
 
     private void fetchDeviceAndCheckSubscription() {
-        // GUEST MODE: Skip fetchMyDevices if no token
-        if (RetrofitClient.getToken(this) == null) {
-            // Check if we already have a registered Guest ID
-            Long registeredId = DeviceIdManager.getRegisteredDeviceId(this);
-            if (registeredId != null) {
-                checkSubscription(registeredId); // Will skip sub check inside
-            } else {
-                registerDevice();
-            }
-            return;
-        }
-
         apiService.getMyDevices().enqueue(new Callback<ApiResponse<List<Device>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Device>>> call, Response<ApiResponse<List<Device>>> response) {
@@ -327,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     checkSubscription(response.body().getData().getId());
                 } else {
-                    handleConnectionFailure(getString(R.string.device_registration_failed));
+                     handleConnectionFailure(getString(R.string.device_registration_failed));
                 }
             }
 

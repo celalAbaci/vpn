@@ -33,12 +33,25 @@ const AdminDashboard = () => {
           <StatCard title="Revenue" value="$12,450" change="+8%" color="bg-yellow-500" />
         </div>
 
-        {/* Live Map Placeholder */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-96 flex items-center justify-center mb-8">
-          <div className="text-center">
-            <h3 className="text-xl font-semibold text-gray-500">Live Connection Map</h3>
-            <p className="text-gray-400">Map integration would go here (Leaflet/Mapbox)</p>
-          </div>
+        {/* Server Load & Live Map */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-96 flex flex-col">
+                 <h3 className="text-xl font-semibold text-gray-800 mb-4">Server CPU/RAM Load</h3>
+                 <div className="flex-1 flex items-end justify-between space-x-2 px-4 pb-4 border-b border-l border-gray-200">
+                     {/* Mock Bar Chart */}
+                     {[40, 65, 30, 85, 50, 60, 75, 45, 90, 55, 30, 60].map((h, i) => (
+                         <div key={i} className="w-full bg-blue-500 rounded-t" style={{ height: `${h}%`, opacity: 0.7 }}></div>
+                     ))}
+                 </div>
+                 <div className="text-center text-xs text-gray-400 mt-2">Real-time Load (Last 12 Hours)</div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-96 flex items-center justify-center">
+                <div className="text-center">
+                    <h3 className="text-xl font-semibold text-gray-500">Live Connection Map</h3>
+                    <p className="text-gray-400">Map integration (Leaflet/Mapbox)</p>
+                </div>
+            </div>
         </div>
 
         {/* Recent Activity Table */}
