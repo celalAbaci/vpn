@@ -9,8 +9,12 @@ import java.time.OffsetDateTime;
 
 @Data
 public class UserConnectionLogCreateDto {
-    @NotNull(message = "Device ID cannot be null")
+
+    // For logged-in users
     private Long deviceId;
+
+    // For guest users
+    private String uniqueDeviceId;
 
     @NotNull(message = "Server ID cannot be null")
     private Long serverId;

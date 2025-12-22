@@ -2,6 +2,7 @@ package com.celalabaci.service.agent.strategy;
 
 import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnProtocol;
+import com.celalabaci.entity.Device;
 import com.celalabaci.entity.User;
 import com.celalabaci.entity.UserDevice;
 import com.celalabaci.entity.VpnServer;
@@ -27,7 +28,20 @@ public class OpenVpnProvisioningStrategy implements VpnProvisioningStrategy {
     @Override
     public AgentDTOs.OpenVpnCredentials provision(VpnServer server, User user, UserDevice device) {
         String clientName = user.getUsername() + "_" + device.getId();
+        return executeProvisioning(server, clientName);
+    }
 
+    @Override
+    public AgentDTOs.OpenVpnCredentials provisionGuest(VpnServer server, Device device) {
+        // Use Unique Device ID directly, sanitized
+        String clientName = "guest_" + device.getUniqueDeviceId().replaceAll("[^a-zA-Z0-9]", "_");
+        if (clientName.length() > 60) {
+            clientName = clientName.substring(0, 60);
+        }
+        return executeProvisioning(server, clientName);
+    }
+
+    private AgentDTOs.OpenVpnCredentials executeProvisioning(VpnServer server, String clientName) {
         // Command: MENU_OPTION="1" CLIENT="testuser" PASS="1" ./openvpn-install.sh
         String createCommand = String.format(
                 "MENU_OPTION=\"1\" CLIENT=\"%s\" PASS=\"1\" ./openvpn-install.sh",

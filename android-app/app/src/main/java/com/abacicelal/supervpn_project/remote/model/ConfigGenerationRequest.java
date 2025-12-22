@@ -20,13 +20,24 @@ public class ConfigGenerationRequest {
     @SerializedName("deviceId")
     private Long deviceId;
 
+    @SerializedName("guestDeviceId")
+    private String guestDeviceId; // For guest users
+
     @SerializedName("dnsProvider")
     private String dnsProvider; // CustomDnsProvider enum'ının String hali ("DEFAULT", "ADGUARD" vb.) (opsiyonel)
 
-    // Constructor
+    // Constructor for Logged-in User
     public ConfigGenerationRequest(Long entryServerId, Long deviceId, VpnProtocol protocol) {
         this.entryServerId = entryServerId;
         this.deviceId = deviceId;
+        this.protocol = protocol.name();
+        this.dnsProvider = CustomDnsProvider.DEFAULT.name(); // Varsayılan
+    }
+
+    // Constructor for Guest User
+    public ConfigGenerationRequest(Long entryServerId, String guestDeviceId, VpnProtocol protocol) {
+        this.entryServerId = entryServerId;
+        this.guestDeviceId = guestDeviceId;
         this.protocol = protocol.name();
         this.dnsProvider = CustomDnsProvider.DEFAULT.name(); // Varsayılan
     }
@@ -46,6 +57,10 @@ public class ConfigGenerationRequest {
 
     public void setDeviceId(Long deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public void setGuestDeviceId(String guestDeviceId) {
+        this.guestDeviceId = guestDeviceId;
     }
 
     public void setDnsProvider(CustomDnsProvider dnsProvider) {

@@ -3,19 +3,19 @@ package com.celalabaci.service.impl;
 import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnConfigGenerationRequest;
 import com.celalabaci.dto.config.VpnConfigResponse;
+import com.celalabaci.entity.Device;
 import com.celalabaci.entity.User;
 import com.celalabaci.entity.UserDevice;
 import com.celalabaci.entity.UserVpnConfig;
 import com.celalabaci.entity.VpnServer;
 import com.celalabaci.exception.ConfigGenerationException;
 import com.celalabaci.exception.MessageType;
-import com.celalabaci.repository.UserConnectionLogRepository;
+import com.celalabaci.repository.DeviceRepository;
 import com.celalabaci.repository.UserDeviceRepository;
 import com.celalabaci.repository.UserVpnConfigRepository;
 import com.celalabaci.repository.VpnServerRepository;
 import com.celalabaci.service.IVpnConfigService;
 import com.celalabaci.service.agent.VpnApiAgentService;
-import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +27,7 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
     private final VpnServerRepository vpnServerRepository;
     private final UserDeviceRepository userDeviceRepository;
+    private final DeviceRepository deviceRepository;
     private final VpnApiAgentService vpnApiAgentService;
     private final UserVpnConfigRepository userVpnConfigRepository;
 
@@ -43,14 +44,23 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             }
         }
 
-        UserDevice device = null;
+        UserDevice userDevice = null;
+        Device guestDevice = null;
+
         if (currentUser != null) {
-             device = userDeviceRepository.findById(request.getDeviceId())
+            // Logged-in User
+            if (request.getDeviceId() == null) {
+                 throw new ConfigGenerationException(MessageType.VALIDATION_ERROR, "Cihaz ID (deviceId) zorunludur.");
+            }
+            userDevice = userDeviceRepository.findById(request.getDeviceId())
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Cihaz bulunamadı"));
         } else {
-             // Guest Logic
-             device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
-             if (device == null) {
+             // Guest User
+             if (request.getGuestDeviceId() == null) {
+                 throw new ConfigGenerationException(MessageType.VALIDATION_ERROR, "Misafir Cihaz ID (guestDeviceId) zorunludur.");
+             }
+             guestDevice = deviceRepository.findByUniqueDeviceId(request.getGuestDeviceId()).orElse(null);
+             if (guestDevice == null) {
                  throw new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Misafir cihaz kaydı bulunamadı. Lütfen önce cihazı kaydedin.");
              }
         }
@@ -59,7 +69,12 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         switch (request.getProtocol()) {
             case OPENVPN:
-                AgentDTOs.OpenVpnCredentials ovpn = vpnApiAgentService.provisionOpenVpnUser(entryServer, currentUser, device);
+                AgentDTOs.OpenVpnCredentials ovpn;
+                if (currentUser != null) {
+                    ovpn = vpnApiAgentService.provisionOpenVpnUser(entryServer, currentUser, userDevice);
+                } else {
+                    ovpn = vpnApiAgentService.provisionOpenVpnGuest(entryServer, guestDevice);
+                }
 
                 // Start with the raw config from the server
                 String rawConfig = ovpn.getUserCert();
@@ -74,11 +89,9 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 // Add extra options that might be missing or needed
                 sb.append("ignore-unknown-option block-outside-dns\n");
 
-                // Guest hız limiti (Gerekirse)
-                // 16Mbps approx (16*1000*1000 bits / 8 = 2000000 bytes)
-                // Ancak OpenVPN 'shaper' byte/sec cinsinden çalışır.
-                // 16 Mbit = ~2 MB/s = 2097152 bytes. 2000000 olarak bırakalım.
+                // Guest Speed Limit (16Mbps)
                 if (currentUser == null) {
+                     // 16Mbps approx (16*1000*1000 bits / 8 = 2000000 bytes)
                      sb.append("shaper 2000000\n");
                 }
 
@@ -86,20 +99,34 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 break;
 
             case IKEV2:
-                AgentDTOs.IkeV2Credentials ike = vpnApiAgentService.provisionIkeV2User(entryServer, currentUser, device);
+                AgentDTOs.IkeV2Credentials ike;
+                if (currentUser != null) {
+                     ike = vpnApiAgentService.provisionIkeV2User(entryServer, currentUser, userDevice);
+                } else {
+                     ike = vpnApiAgentService.provisionIkeV2Guest(entryServer, guestDevice);
+                }
                 configContent = "Server: " + ike.getServerAddress() + "\n" +
                         "User: " + ike.getEapUsername() + "\n" +
                         "Pass: " + ike.getEapPassword();
                 break;
 
-            case V2RAY: // YENİ
-                AgentDTOs.V2RayCredentials v2ray = vpnApiAgentService.provisionV2RayUser(entryServer, currentUser, device);
-                // V2Ray için genellikle link (vless://...) konfigürasyon olarak kullanılır.
+            case V2RAY:
+                 AgentDTOs.V2RayCredentials v2ray;
+                 if (currentUser != null) {
+                     v2ray = vpnApiAgentService.provisionV2RayUser(entryServer, currentUser, userDevice);
+                 } else {
+                     v2ray = vpnApiAgentService.provisionV2RayGuest(entryServer, guestDevice);
+                 }
                 configContent = v2ray.getConfigLink();
                 break;
 
-            case SUPER: // YENİ
-                AgentDTOs.SuperCredentials spr = vpnApiAgentService.provisionSuperUser(entryServer, currentUser, device);
+            case SUPER:
+                AgentDTOs.SuperCredentials spr;
+                if (currentUser != null) {
+                    spr = vpnApiAgentService.provisionSuperUser(entryServer, currentUser, userDevice);
+                } else {
+                    spr = vpnApiAgentService.provisionSuperGuest(entryServer, guestDevice);
+                }
                 configContent = spr.getSuperLink();
                 break;
 
@@ -107,15 +134,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 throw new ConfigGenerationException(MessageType.GENERAL_EXCEPTION, "Desteklenmeyen protokol: " + request.getProtocol());
         }
 
-        // --- VERİTABANINA KAYIT ---
-        // Only save for logged-in users to allow re-use
+        // --- VERİTABANINA KAYIT (Sadece Logged-in) ---
         if (currentUser != null) {
             UserVpnConfig dbConfig = new UserVpnConfig();
             dbConfig.setUser(currentUser);
             dbConfig.setServer(entryServer);
             dbConfig.setProtocol(request.getProtocol());
             dbConfig.setConfigContent(configContent);
-            // V2Ray ve Super için identifier olarak linkin bir parçasını veya UUID'yi kullanabiliriz
             userVpnConfigRepository.save(dbConfig);
         }
 

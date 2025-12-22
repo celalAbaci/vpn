@@ -2,6 +2,7 @@ package com.celalabaci.service.agent;
 
 import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnProtocol;
+import com.celalabaci.entity.Device;
 import com.celalabaci.entity.User;
 import com.celalabaci.entity.UserDevice;
 import com.celalabaci.entity.VpnServer;
@@ -34,8 +35,18 @@ public class VpnApiAgentServiceImpl implements VpnApiAgentService {
     }
 
     @Override
+    public AgentDTOs.OpenVpnCredentials provisionOpenVpnGuest(VpnServer server, Device device) {
+        return (AgentDTOs.OpenVpnCredentials) getStrategy(VpnProtocol.OPENVPN).provisionGuest(server, device);
+    }
+
+    @Override
     public AgentDTOs.IkeV2Credentials provisionIkeV2User(VpnServer server, User user, UserDevice device) {
         return (AgentDTOs.IkeV2Credentials) getStrategy(VpnProtocol.IKEV2).provision(server, user, device);
+    }
+
+    @Override
+    public AgentDTOs.IkeV2Credentials provisionIkeV2Guest(VpnServer server, Device device) {
+        return (AgentDTOs.IkeV2Credentials) getStrategy(VpnProtocol.IKEV2).provisionGuest(server, device);
     }
 
     @Override
@@ -44,8 +55,18 @@ public class VpnApiAgentServiceImpl implements VpnApiAgentService {
     }
 
     @Override
+    public AgentDTOs.V2RayCredentials provisionV2RayGuest(VpnServer server, Device device) {
+        return (AgentDTOs.V2RayCredentials) getStrategy(VpnProtocol.V2RAY).provisionGuest(server, device);
+    }
+
+    @Override
     public AgentDTOs.SuperCredentials provisionSuperUser(VpnServer server, User user, UserDevice device) {
         return (AgentDTOs.SuperCredentials) getStrategy(VpnProtocol.SUPER).provision(server, user, device);
+    }
+
+    @Override
+    public AgentDTOs.SuperCredentials provisionSuperGuest(VpnServer server, Device device) {
+        return (AgentDTOs.SuperCredentials) getStrategy(VpnProtocol.SUPER).provisionGuest(server, device);
     }
 
     @Override
