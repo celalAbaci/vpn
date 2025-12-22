@@ -34,6 +34,8 @@ import com.abacicelal.supervpn_project.remote.model.ApiResponse;
 import com.abacicelal.supervpn_project.remote.model.ConfigGenerationRequest;
 import com.abacicelal.supervpn_project.remote.model.Device;
 import com.abacicelal.supervpn_project.remote.model.DeviceRequest;
+import com.abacicelal.supervpn_project.remote.model.GuestLoginRequest;
+import com.abacicelal.supervpn_project.remote.model.GuestLoginResponse;
 import com.abacicelal.supervpn_project.remote.model.Subscription;
 import com.abacicelal.supervpn_project.remote.model.VpnConfigResponse;
 import com.abacicelal.supervpn_project.remote.model.VpnProtocol;
@@ -289,25 +291,28 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
 
     private void handleGuestConnection() {
         String uniqueId = DeviceIdManager.getDeviceId(this);
+        GuestLoginRequest request = new GuestLoginRequest(uniqueId);
 
-        apiService.guestLogin(uniqueId).enqueue(new Callback<String>() {
+        apiService.guestLogin(request).enqueue(new Callback<GuestLoginResponse>() {
             @Override
-            public void onResponse(Call<String> call, Response<String> response) {
+            public void onResponse(Call<GuestLoginResponse> call, Response<GuestLoginResponse> response) {
                  if (response.isSuccessful() && response.body() != null) {
                      // Store the Guest JWT token. RetrofitClient will pick this up for subsequent requests.
-                     getSharedPreferences("VPN_PREFS", MODE_PRIVATE).edit()
-                         .putString("auth_token", response.body()).apply();
+                     GuestLoginResponse authData = response.body();
+                     RetrofitClient.saveToken(MainActivity.this, authData.getToken(), null);
 
-                     // Proceed to fetch the assigned device ID and configuration
-                     fetchDeviceAndCheckSubscription();
+                     // Guest Login Successful. Directly proceed to fetch config.
+                     // Guests don't have "MyDevices" usually in the same way, or it returns empty.
+                     // We can skip fetching devices and directly go to fetchVpnConfig with guestDeviceId.
+                     fetchVpnConfigForGuest(uniqueId);
                  } else {
                      handleConnectionFailure(getString(R.string.connection_failed) + " (Guest Auth Error: " + response.code() + ")");
                  }
             }
 
             @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                handleConnectionFailure("Guest Login Network Error");
+            public void onFailure(Call<GuestLoginResponse> call, Throwable t) {
+                handleConnectionFailure("Guest Login Network Error: " + t.getMessage());
             }
         });
     }
@@ -451,6 +456,19 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         });
     }
 
+    private void fetchVpnConfigForGuest(String guestDeviceId) {
+        long serverId = sharedPreferences.getLong(KEY_SELECTED_SERVER_ID, 0);
+        if (serverId == 0) {
+            Toast.makeText(this, getString(R.string.server_select_first), Toast.LENGTH_LONG).show();
+            startActivity(new Intent(this, ServerSelectionActivity.class));
+            handleConnectionFailure(null);
+            return;
+        }
+
+        ConfigGenerationRequest request = new ConfigGenerationRequest(serverId, guestDeviceId, selectedProtocol);
+        executeConfigFetch(request);
+    }
+
     private void fetchVpnConfig(Long deviceId) {
         long serverId = sharedPreferences.getLong(KEY_SELECTED_SERVER_ID, 0);
         if (serverId == 0) {
@@ -461,7 +479,10 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         }
 
         ConfigGenerationRequest request = new ConfigGenerationRequest(serverId, deviceId, selectedProtocol);
+        executeConfigFetch(request);
+    }
 
+    private void executeConfigFetch(ConfigGenerationRequest request) {
         apiService.generateConfig(request).enqueue(new Callback<ApiResponse<VpnConfigResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<VpnConfigResponse>> call, Response<ApiResponse<VpnConfigResponse>> response) {

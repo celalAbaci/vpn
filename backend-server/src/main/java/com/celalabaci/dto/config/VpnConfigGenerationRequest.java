@@ -32,8 +32,15 @@ public class VpnConfigGenerationRequest {
     @NotNull(message = "Protokol tipi boş olamaz.")
     private VpnProtocol protocol;
 
-    @NotNull(message = "Cihaz ID'si boş olamaz.")
+    /**
+     * Logged-in users send this (UserDevice ID).
+     */
     private Long deviceId;
+
+    /**
+     * Guest users send this (String Unique Device ID).
+     */
+    private String guestDeviceId;
 
     /**
      * (YENİ EKLENDİ)

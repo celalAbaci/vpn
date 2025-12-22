@@ -35,7 +35,7 @@ public interface ApiService {
     Call<AuthResponse> refreshToken(@Body RefreshTokenRequest refreshTokenRequest);
 
     @POST("api/v1/auth/guest-login")
-    Call<String> guestLogin(@retrofit2.http.Query("deviceId") String deviceId);
+    Call<GuestLoginResponse> guestLogin(@Body GuestLoginRequest guestLoginRequest);
 
     // --- 2. Kimlik Doğrulaması GEREKEN İstekler (USER Rolü) ---
     // NOT: Diğer Controller'lar ApiResponse wrapper kullanıyor.
