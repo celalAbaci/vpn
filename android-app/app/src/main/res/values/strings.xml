@@ -50,4 +50,12 @@
     <string name="location_selection">Location Selection</string>
     <string name="help">Help</string>
     <string name="select_language">Select Language</string>
+    <string name="subscription_plan">Plan: %s</string>
+    <string name="subscription_expiry">Expires: %s</string>
+    <string name="subscription_speed">Speed Limit: %s Mbps</string>
+    <string name="my_devices">My Devices</string>
+    <string name="device_last_seen">Last seen: %s</string>
+    <string name="device_status_active">Active</string>
+    <string name="device_status_inactive">Inactive</string>
+    <string name="no_active_subscription">No active subscription</string>
 </resources>
