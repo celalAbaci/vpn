@@ -521,13 +521,24 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
      */
     private void startOpenVpn(String configContent) {
         try {
+            if (configContent == null || configContent.isEmpty()) {
+                handleConnectionFailure(getString(R.string.config_error));
+                return;
+            }
+
             // 1. Parse Config
             ConfigParser cp = new ConfigParser();
             cp.parseConfig(new StringReader(configContent));
             VpnProfile vp = cp.convertProfile();
 
+            if (vp == null) {
+                handleConnectionFailure("VPN Profili oluşturulamadı. Config dosyası hatalı.");
+                return;
+            }
+
             // Set profile name
-            vp.mName = "SuperVPN " + sharedPreferences.getString(KEY_SELECTED_SERVER_NAME, "");
+            String serverName = sharedPreferences.getString(KEY_SELECTED_SERVER_NAME, "Server");
+            vp.mName = "SuperVPN " + serverName;
 
             // 2. Set as temporary profile
             ProfileManager.getInstance(this).setTemporaryProfile(this, vp);
