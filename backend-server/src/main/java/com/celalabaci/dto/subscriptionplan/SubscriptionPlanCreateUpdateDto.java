@@ -36,4 +36,7 @@ public class SubscriptionPlanCreateUpdateDto {
     @NotNull(message = "Data limit cannot be null.")
     @Positive(message = "Data limit in GB must be positive.")
     private Integer dataLimitGb;
+
+    @NotEmpty(message = "Currency cannot be empty.")
+    private String currency;
 }

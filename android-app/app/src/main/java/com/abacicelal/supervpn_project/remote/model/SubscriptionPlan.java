@@ -30,6 +30,9 @@ public class SubscriptionPlan {
     @SerializedName("dataLimitGb")
     private Integer dataLimitGb;
 
+    @SerializedName("currency")
+    private String currency;
+
     // Getter
     public Long getId() {
         return id;
@@ -57,5 +60,9 @@ public class SubscriptionPlan {
 
     public Integer getDataLimitGb() {
         return dataLimitGb;
+    }
+
+    public String getCurrency() {
+        return currency;
     }
 }

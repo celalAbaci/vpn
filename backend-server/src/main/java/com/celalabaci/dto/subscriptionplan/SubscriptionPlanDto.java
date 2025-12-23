@@ -18,4 +18,5 @@ public class SubscriptionPlanDto {
     // YENİ EKLENEN ALANLAR
     private Integer deviceLimit;
     private Integer dataLimitGb;
+    private String currency;
 }

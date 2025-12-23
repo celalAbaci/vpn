@@ -146,29 +146,29 @@ public class PremiumActivity extends AppCompatActivity {
             if (plan.getDurationDays() != null && plan.getDurationDays() <= 10) { // Haftalık (örn: 7 gün)
                 weeklyPlanId = plan.getId();
                 tvWeeklyPlanName.setText(plan.getName());
-                tvWeeklyPrice.setText(formatPrice(plan.getPrice(), "hafta"));
+                tvWeeklyPrice.setText(formatPrice(plan.getPrice(), plan.getCurrency(), "hafta"));
                 tvWeeklyDetails.setText(String.format(Locale.getDefault(), "%d Cihaz / %dGB Limit", plan.getDeviceLimit(), plan.getDataLimitGb()));
                 weeklyPlanLayout.setVisibility(View.VISIBLE);
             } else if (plan.getDurationDays() != null && plan.getDurationDays() <= 35) { // Aylık (örn: 30 gün)
                 monthlyPlanId = plan.getId();
                 tvMonthlyPlanName.setText(plan.getName());
-                tvMonthlyPrice.setText(formatPrice(plan.getPrice(), "ay"));
+                tvMonthlyPrice.setText(formatPrice(plan.getPrice(), plan.getCurrency(), "ay"));
                 tvMonthlyDetails.setText(String.format(Locale.getDefault(), "%d Cihaz / %dGB Limit", plan.getDeviceLimit(), plan.getDataLimitGb()));
                 monthlyPlanLayout.setVisibility(View.VISIBLE);
             } else if (plan.getDurationDays() != null) { // Yıllık (örn: 365 gün)
                 yearlyPlanId = plan.getId();
                 tvYearlyPlanName.setText(plan.getName());
-                tvYearlyPrice.setText(formatPrice(plan.getPrice(), "yıl"));
+                tvYearlyPrice.setText(formatPrice(plan.getPrice(), plan.getCurrency(), "yıl"));
                 tvYearlyDetails.setText(String.format(Locale.getDefault(), "%d Cihaz / %dGB Limit", plan.getDeviceLimit(), plan.getDataLimitGb()));
                 yearlyPlanLayout.setVisibility(View.VISIBLE);
             }
         }
     }
 
-    private String formatPrice(BigDecimal price, String duration) {
+    private String formatPrice(BigDecimal price, String currency, String duration) {
         if (price == null) price = BigDecimal.ZERO;
-        // TODO: Para birimini (örn: TL) backend'den veya sabit olarak ekleyin
-        return String.format(Locale.getDefault(), "%.2f TL / %s", price, duration);
+        if (currency == null || currency.isEmpty()) currency = "TL";
+        return String.format(Locale.getDefault(), "%.2f %s / %s", price, currency, duration);
     }
 
     private void setAllLayoutsEnabled(boolean enabled) {

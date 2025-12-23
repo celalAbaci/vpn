@@ -31,4 +31,7 @@ public class SubscriptionPlan extends BaseEntity {
 
     @Column(name = "data_limit_gb", nullable = false)
     private Integer dataLimitGb; // Aylık veri limiti (GB cinsinden)
+
+    @Column(name = "currency", length = 3)
+    private String currency = "TL";
 }
