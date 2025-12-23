@@ -70,7 +70,7 @@ dependencies {
     // IKEv2 Support (Placeholder for local module or external lib)
     // Note: To fully satisfy the prompt, we ensure the dependency is declared.
     // If 'libs/strongswan.aar' exists, this works. If not, we rely on the project structure provided.
-    // implementation files('libs/strongswan.aar')
+    implementation files('libs/strongswan.aar')
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

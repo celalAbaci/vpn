@@ -89,9 +89,11 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 // Add extra options that might be missing or needed
                 sb.append("ignore-unknown-option block-outside-dns\n");
 
-                // Guest Speed Limit (16Mbps)
-                if (currentUser == null) {
-                     // 16Mbps approx (16*1000*1000 bits / 8 = 2000000 bytes)
+                // Speed Limit for Guest & Free Users (16Mbps)
+                // 16Mbps approx (16*1000*1000 bits / 8 = 2000000 bytes)
+                boolean isFreeTier = currentUser == null || (currentUser.getRole() != null && !currentUser.getRole().name().equals("PREMIUM"));
+
+                if (isFreeTier) {
                      sb.append("shaper 2000000\n");
                 }
 

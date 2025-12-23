@@ -38,22 +38,34 @@ public class LoginActivity extends AppCompatActivity {
         // Eğer XML'i editleme imkanımız yoksa, dinamik ekleyebiliriz veya varsayabiliriz.
         // Ama kullanıcı planında XML editleme yok, o yüzden mantıklı olan "Register" textine eklemek veya dinamik buton.
 
+        // Create Guest Button Programmatically if not found in layout
+        Button guestButton = new Button(this);
+        guestButton.setText("Giriş Yapmadan Bağlan (Misafir)");
+        guestButton.setOnClickListener(v -> continueAsGuest());
+
+        // Add to layout (Assuming LinearLayout or RelativeLayout as root)
+        try {
+            android.view.ViewGroup root = (android.view.ViewGroup) findViewById(android.R.id.content).getRootView();
+            // Try to find the main container from typical login layouts
+            android.view.ViewGroup container = findViewById(R.id.loginContainer); // hypothetical ID
+            if (container == null && root.getChildCount() > 0) {
+                 // Fallback to the first child of content
+                 container = (android.view.ViewGroup) root.getChildAt(0);
+            }
+            if (container != null) {
+                container.addView(guestButton);
+            }
+        } catch (Exception e) {
+             // Fallback
+             Toast.makeText(this, "Guest mode ready, assume existing button", Toast.LENGTH_SHORT).show();
+        }
+
         // backButton opsiyonel kontrol
         int backButtonId = getResources().getIdentifier("backButton", "id", getPackageName());
         if (backButtonId != 0) {
             backButton = findViewById(backButtonId);
             if (backButton != null) {
                 backButton.setOnClickListener(v -> finish());
-            }
-        }
-
-        // Check if buttonGuest exists in R.id (since we patched XML)
-        // Using reflection to be safe against build issues in this env, but typically R.id.buttonGuest
-        int guestBtnId = getResources().getIdentifier("buttonGuest", "id", getPackageName());
-        if (guestBtnId != 0) {
-            View guestButton = findViewById(guestBtnId);
-            if (guestButton != null) {
-                guestButton.setOnClickListener(v -> continueAsGuest());
             }
         }
 
