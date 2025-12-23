@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import com.abacicelal.supervpn_project.BuildConfig;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -29,8 +31,7 @@ private static final String BASE_URL = "http://api.dataguardvpn.com:8080/";
 
             // Ağ isteklerini logcat'te görmek için logging interceptor
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-            // TODO: Uygulamayı yayınlarken bunu BODY yerine NONE yapın
-            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+            loggingInterceptor.setLevel(BuildConfig.DEBUG ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE);
 
             // Token eklemek için AuthInterceptor'ı oluştur
             AuthInterceptor authInterceptor = new AuthInterceptor(context);
