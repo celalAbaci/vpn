@@ -2,9 +2,11 @@ package com.abacicelal.supervpn_project;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,8 +25,13 @@ import retrofit2.Response;
 public class UserProfileActivity extends AppCompatActivity {
 
     private TextView textViewWelcome;
+    private TextView textViewPlanName;
+    private TextView textViewSubStatus;
+    private TextView textViewExpiry;
+    private TextView textViewSpeedLimit;
+    private LinearLayout deviceListContainer;
     private Button buttonLogout;
-    private View backButton; // View olarak alıyoruz, ImageButton veya Button olabilir
+    private View backButton;
     private ApiService apiService;
 
     @Override
@@ -34,11 +41,16 @@ public class UserProfileActivity extends AppCompatActivity {
 
         apiService = RetrofitClient.getApiService(getApplicationContext());
 
-        // Mevcut ID'leri güvenli şekilde buluyoruz
+        // Initialize Views
         textViewWelcome = findViewById(R.id.textViewWelcome);
+        textViewPlanName = findViewById(R.id.textViewPlanName);
+        textViewSubStatus = findViewById(R.id.textViewSubStatus);
+        textViewExpiry = findViewById(R.id.textViewExpiry);
+        textViewSpeedLimit = findViewById(R.id.textViewSpeedLimit);
+        deviceListContainer = findViewById(R.id.deviceListContainer);
         buttonLogout = findViewById(R.id.buttonLogout);
 
-        // R.id.backButton XML'de olmayabilir, kontrol ediyoruz
+        // Handle back button
         int backButtonId = getResources().getIdentifier("backButton", "id", getPackageName());
         if (backButtonId != 0) {
             backButton = findViewById(backButtonId);
@@ -65,7 +77,7 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void loadUserData() {
-        // 1. Abonelikleri Çek
+        // 1. Fetch Subscriptions
         apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
@@ -73,27 +85,44 @@ public class UserProfileActivity extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<Subscription> subs = response.body().getData();
-                    boolean isActive = false;
+                    Subscription activeSub = null;
                     for (Subscription s : subs) {
                         if (s.isActive()) {
-                            isActive = true;
+                            activeSub = s;
                             break;
                         }
                     }
 
-                    String statusText = "\n\n" + String.format(getString(R.string.subscription_status),
-                            (isActive ? getString(R.string.subscription_active) : getString(R.string.subscription_inactive)));
-                    textViewWelcome.append(statusText);
+                    if (activeSub != null) {
+                        String planName = activeSub.getPlan() != null ? activeSub.getPlan().getName() : "Premium";
+                        textViewPlanName.setText(String.format(getString(R.string.subscription_plan), planName));
+
+                        textViewSubStatus.setText(String.format(getString(R.string.subscription_status), getString(R.string.subscription_active)));
+                        textViewSubStatus.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+
+                        textViewExpiry.setText(String.format(getString(R.string.subscription_expiry), activeSub.getEndDate()));
+
+                        int speed = activeSub.getSpeedLimitMbps() != null ? activeSub.getSpeedLimitMbps() :
+                                   (activeSub.getPlan() != null ? activeSub.getPlan().getSpeedLimitMbps() : 0);
+                        textViewSpeedLimit.setText(String.format(getString(R.string.subscription_speed), String.valueOf(speed)));
+                    } else {
+                        textViewPlanName.setText(getString(R.string.no_active_subscription));
+                        textViewSubStatus.setText(String.format(getString(R.string.subscription_status), getString(R.string.subscription_inactive)));
+                        textViewSubStatus.setTextColor(getResources().getColor(android.R.color.darker_gray));
+                        textViewExpiry.setText("");
+                        textViewSpeedLimit.setText("");
+                    }
+
                 } else {
-                     textViewWelcome.append("\n\n" + getString(R.string.subscription_info_error));
+                     textViewPlanName.setText(getString(R.string.subscription_info_error));
                 }
-                // Cihazları çekmeye devam et
+                // Continue to load devices
                 loadDevices();
             }
 
             @Override
             public void onFailure(Call<ApiResponse<List<Subscription>>> call, Throwable t) {
-                if (textViewWelcome != null) textViewWelcome.append("\n\n" + getString(R.string.subscription_conn_error));
+                if (textViewPlanName != null) textViewPlanName.setText(getString(R.string.subscription_conn_error));
                 loadDevices();
             }
         });
@@ -103,17 +132,41 @@ public class UserProfileActivity extends AppCompatActivity {
         apiService.getMyDevices().enqueue(new Callback<ApiResponse<List<Device>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Device>>> call, Response<ApiResponse<List<Device>>> response) {
-                if (textViewWelcome == null) return;
+                if (deviceListContainer == null) return;
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    int count = response.body().getData().size();
-                    textViewWelcome.append("\n" + String.format(getString(R.string.connected_devices), count));
+                    List<Device> devices = response.body().getData();
+                    deviceListContainer.removeAllViews();
+
+                    LayoutInflater inflater = LayoutInflater.from(UserProfileActivity.this);
+
+                    for (Device device : devices) {
+                        View deviceView = inflater.inflate(R.layout.item_device, deviceListContainer, false);
+
+                        TextView nameView = deviceView.findViewById(R.id.textViewDeviceName);
+                        TextView statusView = deviceView.findViewById(R.id.textViewDeviceStatus);
+                        TextView lastSeenView = deviceView.findViewById(R.id.textViewDeviceLastSeen);
+
+                        nameView.setText(device.getDeviceName());
+
+                        if (device.isActive()) {
+                            statusView.setText(getString(R.string.device_status_active));
+                            statusView.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+                        } else {
+                            statusView.setText(getString(R.string.device_status_inactive));
+                            statusView.setTextColor(getResources().getColor(android.R.color.darker_gray));
+                        }
+
+                        lastSeenView.setText(String.format(getString(R.string.device_last_seen), device.getLastSeen()));
+
+                        deviceListContainer.addView(deviceView);
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<List<Device>>> call, Throwable t) {
-                // Sessizce geç
+                // Silently fail or show error
             }
         });
     }
