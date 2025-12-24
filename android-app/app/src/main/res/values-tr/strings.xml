@@ -1,13 +1,22 @@
 <resources>
-    <string name="app_name">SuperVPN Projesi</string>
-    <string name="status_connecting">Bağlanıyor...</string>
+    <string name="app_name">DataGuard VPN</string>
+    <string name="connect">Bağlan</string>
+    <string name="disconnect">Bağlantıyı Kes</string>
     <string name="status_connected">Bağlandı</string>
-    <string name="status_disconnected">Bağlantı Yok</string>
+    <string name="status_disconnected">Bağlantı Kesildi</string>
+    <string name="guest_login">Giriş Yapmadan Bağlan</string>
+    <string name="premium_upgrade">Premium'a Yükselt</string>
+    <string name="select_server">Sunucu Seçin</string>
+    <string name="settings">Ayarlar</string>
+    <string name="language">Dil</string>
+
+    <!-- Missing strings restored -->
+    <string name="status_connecting">Bağlanıyor...</string>
     <string name="status_label_connecting">BAĞLANIYOR</string>
     <string name="status_label_connected">BAĞLANTIYI KES</string>
     <string name="status_label_disconnected">BAĞLAN</string>
     <string name="tap_to_connect">Bağlanmak için dokunun</string>
-    <string name="server_select">Sunucu Seçiniz</string>
+    <string name="server_select">Sunucu Seç</string>
     <string name="current_server">Mevcut Sunucu: %s</string>
     <string name="please_login">Lütfen önce giriş yapın.</string>
     <string name="error_device_info">Cihaz bilgisi alınamadı.</string>
@@ -37,7 +46,7 @@
     <string name="network_error_register">Ağ Hatası (Kayıt): %s</string>
     <string name="network_error_sub">Ağ Hatası (Abonelik): %s</string>
     <string name="network_error_config">Ağ Hatası (Ayar): %s</string>
-    <string name="config_error">Yapılandırma hatası: %d</string>
+    <string name="config_error">Ayar hatası: %d</string>
     <string name="openvpn_error">OpenVPN Başlatma Hatası: %s</string>
     <string name="ikev2_error">IKEv2 Hatası: %s</string>
     <string name="v2ray_error">V2Ray Hatası: %s</string>
@@ -49,5 +58,13 @@
     <string name="browser">Tarayıcı</string>
     <string name="location_selection">Konum Seçimi</string>
     <string name="help">Yardım</string>
-    <string name="select_language">Dil Seçimi</string>
+    <string name="select_language">Dil Seçin</string>
+    <string name="subscription_plan">Plan: %s</string>
+    <string name="subscription_expiry">Bitiş: %s</string>
+    <string name="subscription_speed">Hız Limiti: %s Mbps</string>
+    <string name="my_devices">Cihazlarım</string>
+    <string name="device_last_seen">Son görülme: %s</string>
+    <string name="device_status_active">Aktif</string>
+    <string name="device_status_inactive">Pasif</string>
+    <string name="no_active_subscription">Aktif abonelik yok</string>
 </resources>

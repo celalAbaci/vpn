@@ -14,10 +14,11 @@ import java.time.OffsetDateTime;
 @Table(name = "user_connection_logs", indexes = {
         @Index(name = "idx_log_user", columnList = "user_id"),
         @Index(name = "idx_log_device", columnList = "device_id"),
+        @Index(name = "idx_log_guest_device", columnList = "unique_device_ref_id"),
         @Index(name = "idx_log_server", columnList = "server_id"),
         @Index(name = "idx_log_connect_time", columnList = "connect_time")
 })
-public class UserConnectionLog extends LogBaseEntity { // BaseEntity yerine LogBaseEntity kullanıldı
+public class UserConnectionLog extends LogBaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = true) // Nullable for Guest

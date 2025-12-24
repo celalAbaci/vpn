@@ -18,6 +18,10 @@ android {
         missingDimensionStrategy 'implementation', 'ui'
         missingDimensionStrategy 'ovpnimpl', 'ovpn23'
 
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
+
         // Load API URL from local.properties
         def localProperties = new Properties()
         def localPropertiesFile = rootProject.file('local.properties')
@@ -68,8 +72,6 @@ dependencies {
     implementation 'com.wireguard.android:tunnel:1.0.20230706'
 
     // IKEv2 Support (Placeholder for local module or external lib)
-    // Note: To fully satisfy the prompt, we ensure the dependency is declared.
-    // If 'libs/strongswan.aar' exists, this works. If not, we rely on the project structure provided.
     implementation files('libs/strongswan.aar')
 
     testImplementation 'junit:junit:4.13.2'
