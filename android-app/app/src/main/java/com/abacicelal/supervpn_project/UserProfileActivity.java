@@ -37,87 +37,101 @@ public class UserProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_user_profile);
+        try {
+            setContentView(R.layout.activity_user_profile);
 
-        apiService = RetrofitClient.getApiService(getApplicationContext());
+            apiService = RetrofitClient.getApiService(getApplicationContext());
 
-        // Initialize Views
-        textViewWelcome = findViewById(R.id.textViewWelcome);
-        textViewPlanName = findViewById(R.id.textViewPlanName);
-        textViewSubStatus = findViewById(R.id.textViewSubStatus);
-        textViewExpiry = findViewById(R.id.textViewExpiry);
-        textViewSpeedLimit = findViewById(R.id.textViewSpeedLimit);
-        deviceListContainer = findViewById(R.id.deviceListContainer);
-        buttonLogout = findViewById(R.id.buttonLogout);
+            // Initialize Views
+            textViewWelcome = findViewById(R.id.textViewWelcome);
+            textViewPlanName = findViewById(R.id.textViewPlanName);
+            textViewSubStatus = findViewById(R.id.textViewSubStatus);
+            textViewExpiry = findViewById(R.id.textViewExpiry);
+            textViewSpeedLimit = findViewById(R.id.textViewSpeedLimit);
+            deviceListContainer = findViewById(R.id.deviceListContainer);
+            buttonLogout = findViewById(R.id.buttonLogout);
 
-        // Handle back button
-        int backButtonId = getResources().getIdentifier("backButton", "id", getPackageName());
-        if (backButtonId != 0) {
-            backButton = findViewById(backButtonId);
-            if (backButton != null) {
-                backButton.setOnClickListener(v -> finish());
+            // Handle back button
+            int backButtonId = getResources().getIdentifier("backButton", "id", getPackageName());
+            if (backButtonId != 0) {
+                backButton = findViewById(backButtonId);
+                if (backButton != null) {
+                    backButton.setOnClickListener(v -> finish());
+                }
             }
-        }
 
-        if (buttonLogout != null) {
-            buttonLogout.setOnClickListener(v -> {
-                RetrofitClient.saveToken(UserProfileActivity.this, null, null);
-                Toast.makeText(UserProfileActivity.this, getString(R.string.logout_success), Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(UserProfileActivity.this, MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
-            });
-        }
+            if (buttonLogout != null) {
+                buttonLogout.setOnClickListener(v -> {
+                    RetrofitClient.saveToken(UserProfileActivity.this, null, null);
+                    Toast.makeText(UserProfileActivity.this, getString(R.string.logout_success), Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(UserProfileActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+                });
+            }
 
-        if (textViewWelcome != null) {
-            textViewWelcome.setText(getString(R.string.account_title));
-            loadUserData();
+            if (textViewWelcome != null) {
+                textViewWelcome.setText(getString(R.string.account_title));
+                loadUserData();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Error loading profile: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            // Fallback to main activity to avoid stuck on crash loop
+            finish();
         }
     }
 
     private void loadUserData() {
+        if (apiService == null) return;
+
         // 1. Fetch Subscriptions
         apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
-                if (textViewWelcome == null) return;
+                try {
+                    if (textViewWelcome == null) return;
 
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    List<Subscription> subs = response.body().getData();
-                    Subscription activeSub = null;
-                    for (Subscription s : subs) {
-                        if (s.isActive()) {
-                            activeSub = s;
-                            break;
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        List<Subscription> subs = response.body().getData();
+                        Subscription activeSub = null;
+                        if (subs != null) {
+                            for (Subscription s : subs) {
+                                if (s.isActive()) {
+                                    activeSub = s;
+                                    break;
+                                }
+                            }
                         }
-                    }
 
-                    if (activeSub != null) {
-                        String planName = activeSub.getPlan() != null ? activeSub.getPlan().getName() : "Premium";
-                        textViewPlanName.setText(String.format(getString(R.string.subscription_plan), planName));
+                        if (activeSub != null) {
+                            String planName = (activeSub.getPlan() != null && activeSub.getPlan().getName() != null) ? activeSub.getPlan().getName() : "Premium";
+                            textViewPlanName.setText(String.format(getString(R.string.subscription_plan), planName));
 
-                        textViewSubStatus.setText(String.format(getString(R.string.subscription_status), getString(R.string.subscription_active)));
-                        textViewSubStatus.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+                            textViewSubStatus.setText(String.format(getString(R.string.subscription_status), getString(R.string.subscription_active)));
+                            textViewSubStatus.setTextColor(getResources().getColor(android.R.color.holo_green_light));
 
-                        textViewExpiry.setText(String.format(getString(R.string.subscription_expiry), activeSub.getEndDate()));
+                            textViewExpiry.setText(String.format(getString(R.string.subscription_expiry), activeSub.getEndDate()));
 
-                        int speed = activeSub.getSpeedLimitMbps() != null ? activeSub.getSpeedLimitMbps() :
-                                   (activeSub.getPlan() != null ? activeSub.getPlan().getSpeedLimitMbps() : 0);
-                        textViewSpeedLimit.setText(String.format(getString(R.string.subscription_speed), String.valueOf(speed)));
+                            int speed = activeSub.getSpeedLimitMbps() != null ? activeSub.getSpeedLimitMbps() :
+                                    (activeSub.getPlan() != null && activeSub.getPlan().getSpeedLimitMbps() != null ? activeSub.getPlan().getSpeedLimitMbps() : 0);
+                            textViewSpeedLimit.setText(String.format(getString(R.string.subscription_speed), String.valueOf(speed)));
+                        } else {
+                            textViewPlanName.setText(getString(R.string.no_active_subscription));
+                            textViewSubStatus.setText(String.format(getString(R.string.subscription_status), getString(R.string.subscription_inactive)));
+                            textViewSubStatus.setTextColor(getResources().getColor(android.R.color.darker_gray));
+                            textViewExpiry.setText("");
+                            textViewSpeedLimit.setText("");
+                        }
+
                     } else {
-                        textViewPlanName.setText(getString(R.string.no_active_subscription));
-                        textViewSubStatus.setText(String.format(getString(R.string.subscription_status), getString(R.string.subscription_inactive)));
-                        textViewSubStatus.setTextColor(getResources().getColor(android.R.color.darker_gray));
-                        textViewExpiry.setText("");
-                        textViewSpeedLimit.setText("");
+                        textViewPlanName.setText(getString(R.string.subscription_info_error));
                     }
-
-                } else {
-                     textViewPlanName.setText(getString(R.string.subscription_info_error));
+                    // Continue to load devices
+                    loadDevices();
+                } catch (Exception e) {
+                    // Safe catch
                 }
-                // Continue to load devices
-                loadDevices();
             }
 
             @Override
@@ -129,38 +143,48 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void loadDevices() {
+        if (apiService == null) return;
+
         apiService.getMyDevices().enqueue(new Callback<ApiResponse<List<Device>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Device>>> call, Response<ApiResponse<List<Device>>> response) {
-                if (deviceListContainer == null) return;
+                try {
+                    if (deviceListContainer == null) return;
 
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    List<Device> devices = response.body().getData();
-                    deviceListContainer.removeAllViews();
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        List<Device> devices = response.body().getData();
+                        deviceListContainer.removeAllViews();
 
-                    LayoutInflater inflater = LayoutInflater.from(UserProfileActivity.this);
+                        if (devices == null) return;
 
-                    for (Device device : devices) {
-                        View deviceView = inflater.inflate(R.layout.item_device, deviceListContainer, false);
+                        LayoutInflater inflater = LayoutInflater.from(UserProfileActivity.this);
 
-                        TextView nameView = deviceView.findViewById(R.id.textViewDeviceName);
-                        TextView statusView = deviceView.findViewById(R.id.textViewDeviceStatus);
-                        TextView lastSeenView = deviceView.findViewById(R.id.textViewDeviceLastSeen);
+                        for (Device device : devices) {
+                            View deviceView = inflater.inflate(R.layout.item_device, deviceListContainer, false);
 
-                        nameView.setText(device.getDeviceName());
+                            TextView nameView = deviceView.findViewById(R.id.textViewDeviceName);
+                            TextView statusView = deviceView.findViewById(R.id.textViewDeviceStatus);
+                            TextView lastSeenView = deviceView.findViewById(R.id.textViewDeviceLastSeen);
 
-                        if (device.isActive()) {
-                            statusView.setText(getString(R.string.device_status_active));
-                            statusView.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-                        } else {
-                            statusView.setText(getString(R.string.device_status_inactive));
-                            statusView.setTextColor(getResources().getColor(android.R.color.darker_gray));
+                            if (nameView != null) nameView.setText(device.getDeviceName());
+
+                            if (statusView != null) {
+                                if (device.isActive()) {
+                                    statusView.setText(getString(R.string.device_status_active));
+                                    statusView.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+                                } else {
+                                    statusView.setText(getString(R.string.device_status_inactive));
+                                    statusView.setTextColor(getResources().getColor(android.R.color.darker_gray));
+                                }
+                            }
+
+                            if (lastSeenView != null) lastSeenView.setText(String.format(getString(R.string.device_last_seen), device.getLastSeen()));
+
+                            deviceListContainer.addView(deviceView);
                         }
-
-                        lastSeenView.setText(String.format(getString(R.string.device_last_seen), device.getLastSeen()));
-
-                        deviceListContainer.addView(deviceView);
                     }
+                } catch (Exception e) {
+                    // Safe catch
                 }
             }
 

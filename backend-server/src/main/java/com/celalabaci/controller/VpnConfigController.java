@@ -22,27 +22,17 @@ public class VpnConfigController {
 
     private final IVpnConfigService vpnConfigService;
 
-    /**
-     * Kimliği doğrulanmış kullanıcı için bir VPN konfigürasyon dosyası oluşturur.
-     * Kullanıcının aktif bir aboneliği olmalıdır.
-     *
-     * (NOT: Bu controller, VpnConfigGenerationRequest DTO'su değiştiği için
-     * otomatik olarak Multi-Hop'u destekler. İstemcinin JSON'da "exitServerId"
-     * göndermesi yeterlidir.)
-     */
     @PostMapping("/generate")
     public ResponseEntity<ApiResponse<VpnConfigResponse>> generateConfiguration(
             @Valid @RequestBody VpnConfigGenerationRequest request,
             @AuthenticationPrincipal User currentUser) {
 
         // Guest logic: if no user but deviceId is present
-        if (currentUser == null && request.getDeviceId() != null) {
+        if (currentUser == null && request.getGuestDeviceId() != null) {
              VpnConfigResponse response = vpnConfigService.generateConfig(request, null);
              return ResponseEntity.ok(ApiResponse.success("Misafir konfigürasyon başarıyla oluşturuldu.", response));
         }
 
-        // VpnConfigServiceImpl.generateConfig metodu artık
-        // request.getExitServerId() kontrolünü yapmaktadır.
         VpnConfigResponse response = vpnConfigService.generateConfig(request, currentUser);
 
         return ResponseEntity.ok(ApiResponse.success("Konfigürasyon başarıyla oluşturuldu.", response));
