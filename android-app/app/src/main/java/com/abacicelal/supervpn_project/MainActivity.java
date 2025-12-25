@@ -52,6 +52,19 @@ import de.blinkt.openvpn.core.VPNLaunchHelper;
 import de.blinkt.openvpn.core.VpnStatus;
 import de.blinkt.openvpn.core.ConnectionStatus;
 
+// WireGuard Imports
+import com.wireguard.android.backend.GoBackend;
+import com.wireguard.android.backend.Tunnel;
+import com.wireguard.config.Config;
+import com.wireguard.config.InetNetwork;
+import com.wireguard.config.Peer;
+import com.abacicelal.supervpn_project.utils.WireGuardTunnel;
+
+// Android Native IKEv2 (API 30+)
+import android.net.Ikev2VpnProfile;
+import android.net.VpnManager;
+import android.net.ipsec.ike.IkeSessionParams;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -59,6 +72,8 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity implements VpnStatus.StateListener {
 
     private static final String TAG = "MainActivity";
+    private GoBackend wireGuardBackend;
+    private Tunnel wireGuardTunnel;
     public static boolean isConnected = false;
     private boolean isConnecting = false;
 
@@ -126,6 +141,13 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         setupListeners();
 
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
+        // Initialize WireGuard Backend
+        try {
+            wireGuardBackend = new GoBackend(getApplicationContext());
+        } catch (Exception e) {
+            Log.e(TAG, "WireGuard Backend Init Failed", e);
+        }
 
         // UI Başlangıç Durumu
         updateUIOnConnectionState();
@@ -575,24 +597,33 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             if (resultCode == RESULT_OK) {
                 // Permission granted
                 if (mPendingConfig != null) {
-                     // Retry parsing and starting
-                     startOpenVpn(mPendingConfig);
+                    // Retry starting based on protocol
+                    if (selectedProtocol == VpnProtocol.OPENVPN) {
+                        startOpenVpn(mPendingConfig);
+                    } else if (selectedProtocol == VpnProtocol.SUPER) {
+                         startSuper(mPendingConfig);
+                    } else if (selectedProtocol == VpnProtocol.IKEV2) {
+                         // For IKEv2, the system starts it after permission, but we might need to re-trigger
+                         // if we used the provision intent. However, startProvisionedVpnProfileSession
+                         // usually needs to be called again or it auto-starts.
+                         // Let's safe-call it.
+                         startIkev2(mPendingConfig);
+                    }
                 } else {
-                     // Should not happen usually if we set pending config,
-                     // but if it does, the profile might still be in ProfileManager
-                     // but safer to restart logic.
-                     Toast.makeText(this, "Permission granted. Please connect again.", Toast.LENGTH_SHORT).show();
-                     isConnecting = false;
-                     updateUIOnConnectionState();
+                     // Pending config null means maybe IKEv2 started directly?
+                     // Or just generic success.
+                     Toast.makeText(this, "Permission granted. Connecting...", Toast.LENGTH_SHORT).show();
                 }
             } else {
                 handleConnectionFailure("VPN Permission denied.");
+                isConnecting = false;
+                updateUIOnConnectionState();
             }
         }
     }
 
     /**
-     * IKEv2 implementation
+     * IKEv2 implementation (Native Android - API 30+)
      */
     private void startIkev2(String configContent) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
@@ -602,24 +633,43 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
 
         try {
             String serverAddr = "";
+            String identity = ""; // ID usually matches username or cert CN
             String username = "";
             String password = "";
 
+            // Simple line-based parsing
             String[] lines = configContent.split("\n");
             for (String line : lines) {
                 if (line.startsWith("Server: ")) serverAddr = line.replace("Server: ", "").trim();
                 else if (line.startsWith("User: ")) username = line.replace("User: ", "").trim();
                 else if (line.startsWith("Pass: ")) password = line.replace("Pass: ", "").trim();
             }
+            identity = username; // Assuming identity is same as username for EAP
 
             if (serverAddr.isEmpty()) {
                 handleConnectionFailure(getString(R.string.ikev2_config_error));
                 return;
             }
 
-            Toast.makeText(this, String.format(getString(R.string.ikev2_prepared), serverAddr), Toast.LENGTH_SHORT).show();
-            // Use common handler, effectively simulating success for external process
-            handleConnectionSuccess();
+            // Native Android IKEv2 Setup (API 30+)
+            VpnManager vpnManager = (VpnManager) getSystemService(Context.VPN_MANAGEMENT_SERVICE);
+
+            Ikev2VpnProfile.Builder profileBuilder = new Ikev2VpnProfile.Builder(serverAddr, identity);
+            profileBuilder.setAuthUsernamePassword(username, password, null);
+            // profileBuilder.setBypassable(false); // Optional
+
+            Ikev2VpnProfile profile = profileBuilder.build();
+
+            // Provisioning
+            mPendingConfig = configContent; // Save just in case
+            Intent intent = vpnManager.provisionVpnProfile(profile);
+            if (intent != null) {
+                startActivityForResult(intent, VPN_PERMISSION_REQUEST_CODE);
+            } else {
+                vpnManager.startProvisionedVpnProfileSession();
+                handleConnectionSuccess();
+                mPendingConfig = null;
+            }
 
         } catch (Exception e) {
             Log.e(TAG, "IKEv2 Error", e);
@@ -657,31 +707,62 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     }
 
     /**
-     * Super Protocol implementation.
+     * Super Protocol (WireGuard) implementation.
      */
     private void startSuper(String configContent) {
         try {
-             ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            ClipData clip = ClipData.newPlainText("Super Config", configContent);
-            clipboard.setPrimaryClip(clip);
+            if (wireGuardBackend == null) {
+                 handleConnectionFailure("WireGuard Backend not initialized.");
+                 return;
+            }
 
-            Toast.makeText(this, getString(R.string.super_config_copied), Toast.LENGTH_SHORT).show();
+            // 1. Parse Config
+            // ConfigParser reads InputStream. configContent is string.
+            Config config = Config.parse(new StringReader(configContent));
+
+            // 2. Create/Get Tunnel
+            String tunnelName = "super_wg_tunnel";
+            if (wireGuardTunnel == null) {
+                wireGuardTunnel = new WireGuardTunnel(tunnelName);
+            }
+
+            // 3. Connect
+            // Note: setState is async.
+            // Ensure permission first.
+            Intent intent = GoBackend.VpnService.prepare(this);
+            if (intent != null) {
+                mPendingConfig = configContent; // Save for retry
+                startActivityForResult(intent, VPN_PERMISSION_REQUEST_CODE);
+                return;
+            }
+
+            wireGuardBackend.setState(wireGuardTunnel, Tunnel.State.UP, config);
             handleConnectionSuccess();
+
         } catch (Exception e) {
+            Log.e(TAG, "WireGuard Error", e);
             handleConnectionFailure(String.format(getString(R.string.super_error), e.getMessage()));
         }
     }
 
     private void disconnectVPN() {
-        // Embedded OpenVPN Disconnect
-        if (selectedProtocol == VpnProtocol.OPENVPN) {
-             try {
+        try {
+            if (selectedProtocol == VpnProtocol.OPENVPN) {
                 // Sending stop service intent to OpenVPNService
                 Intent intent = new Intent(this, de.blinkt.openvpn.core.OpenVPNService.class);
                 stopService(intent);
-             } catch (Exception e) {
-                 Log.e(TAG, "Error stopping VPN service", e);
-             }
+            } else if (selectedProtocol == VpnProtocol.SUPER) {
+                if (wireGuardBackend != null && wireGuardTunnel != null) {
+                    wireGuardBackend.setState(wireGuardTunnel, Tunnel.State.DOWN, null);
+                }
+            } else if (selectedProtocol == VpnProtocol.IKEV2) {
+                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                     VpnManager vpnManager = (VpnManager) getSystemService(Context.VPN_MANAGEMENT_SERVICE);
+                     vpnManager.stopProvisionedVpnProfileSession();
+                 }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error stopping VPN service", e);
         }
 
         handleConnectionDisconnected();
