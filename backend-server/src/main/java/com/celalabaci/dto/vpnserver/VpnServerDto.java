@@ -16,4 +16,5 @@ public class VpnServerDto {
     private Float currentLoadPercentage;
     private Integer currentConnectedUsers;
     private boolean isActive;
+    private boolean isFree;
 }
