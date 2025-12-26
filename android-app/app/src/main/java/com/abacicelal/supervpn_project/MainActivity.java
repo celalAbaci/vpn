@@ -585,9 +585,26 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     }
 
     private void startEmbeddedVpn(VpnProfile vp) {
-        VPNLaunchHelper.startOpenVpn(vp, this, "VPN_CONNECT", false);
-        // Clean pending config
-        mPendingConfig = null;
+        try {
+            // Fix: Check if required options are allowed or add them
+            if (vp.mCustomConfigOptions == null) {
+                vp.mCustomConfigOptions = "";
+            }
+            // Add custom options to avoid parsing errors in native lib
+            if (!vp.mCustomConfigOptions.contains("block-outside-dns")) {
+                 vp.mCustomConfigOptions += "ignore-unknown-option block-outside-dns\n";
+            }
+            if (!vp.mCustomConfigOptions.contains("shaper")) {
+                 vp.mCustomConfigOptions += "ignore-unknown-option shaper\n";
+            }
+
+            VPNLaunchHelper.startOpenVpn(vp, this, "VPN_CONNECT", false);
+            // Clean pending config
+            mPendingConfig = null;
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting embedded VPN: ", e);
+            handleConnectionFailure("VPN Start Error: " + e.getMessage());
+        }
     }
 
     @Override

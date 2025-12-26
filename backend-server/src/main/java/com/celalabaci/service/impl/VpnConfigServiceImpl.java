@@ -96,6 +96,7 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 // 16Mbps approx (16*1000*1000 bits / 8 = 2000000 bytes)
                 boolean isFreeTier = currentUser == null || (currentUser.getRole() != null && !currentUser.getRole().name().equals("PREMIUM"));
 
+                // Enforce speed limit for non-premium users
                 if (isFreeTier) {
                      sb.append("shaper 2000000\n");
                 }

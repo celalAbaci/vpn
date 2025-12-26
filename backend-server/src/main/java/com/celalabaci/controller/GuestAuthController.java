@@ -41,6 +41,7 @@ public class GuestAuthController {
         }
 
         // 2. Generate Token
+        // Ensure token is generated with correct claims for Guest Role
         String token = jwtService.generateGuestToken(device.getUniqueDeviceId());
 
         // 3. Return Response
