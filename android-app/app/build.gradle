@@ -4,11 +4,11 @@ plugins {
 
 android {
     namespace 'com.abacicelal.supervpn_project'
-    compileSdk 35 // Updated to be compatible with libraries
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.abacicelal.supervpn_project"
-        minSdk 24 // Updated for IKEv2 and modern libs
+        minSdk 24
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -19,7 +19,8 @@ android {
         missingDimensionStrategy 'ovpnimpl', 'ovpn23'
 
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            // Optimized for size: Only ARM 32/64 bit
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
 
         // Load API URL from local.properties
@@ -43,7 +44,7 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8 // Java 8 is standard for Android
+        sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
@@ -57,7 +58,7 @@ dependencies {
 
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.core:core-ktx:1.12.0' // Added for Kotlin/Core
+    implementation 'androidx.core:core-ktx:1.12.0'
 
     // Retrofit & OkHttp
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
@@ -71,8 +72,8 @@ dependencies {
     // WireGuard Support (Native Library)
     implementation 'com.wireguard.android:tunnel:1.0.20230706'
 
-    // IKEv2 Support (Placeholder for local module or external lib)
-    implementation files('libs/strongswan.aar')
+    // IKEv2 Support
+    // implementation files('libs/strongswan.aar') // TODO: Add local aar or use remote dependency
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
