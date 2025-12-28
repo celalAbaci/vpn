@@ -67,6 +67,10 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         String configContent = "";
 
+        // Speed Limit for Guest & Free Users (16Mbps = 2MB/s = 2000000 bytes)
+        // Check if user is null (Guest) or Role is not PREMIUM
+        boolean isFreeTier = currentUser == null || (currentUser.getRole() != null && !currentUser.getRole().name().equals("PREMIUM") && !currentUser.getRole().name().equals("ADMIN") && !currentUser.getRole().name().equals("MODERATOR"));
+
         switch (request.getProtocol()) {
             case OPENVPN:
                 AgentDTOs.OpenVpnCredentials ovpn;
@@ -76,25 +80,12 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                     ovpn = vpnApiAgentService.provisionOpenVpnGuest(entryServer, guestDevice);
                 }
 
-                // Start with the raw config from the server
                 String rawConfig = ovpn.getUserCert();
-
                 StringBuilder sb = new StringBuilder(rawConfig);
+                if (!rawConfig.endsWith("\n")) sb.append("\n");
 
-                // Ensure there is a newline before appending
-                if (!rawConfig.endsWith("\n")) {
-                    sb.append("\n");
-                }
-
-                // Add extra options that might be missing or needed
                 sb.append("ignore-unknown-option block-outside-dns\n");
-
-                // Allow unknown options to prevent client crashes on new directives
                 sb.append("ignore-unknown-option shaper\n");
-
-                // Speed Limit for Guest & Free Users (16Mbps)
-                // 16Mbps approx (16*1000*1000 bits / 8 = 2000000 bytes)
-                boolean isFreeTier = currentUser == null || (currentUser.getRole() != null && !currentUser.getRole().name().equals("PREMIUM"));
 
                 // Enforce speed limit for non-premium users
                 if (isFreeTier) {

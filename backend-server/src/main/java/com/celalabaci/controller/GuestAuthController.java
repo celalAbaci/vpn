@@ -25,6 +25,10 @@ public class GuestAuthController {
     @PostMapping("/guest-login")
     public ResponseEntity<GuestLoginResponse> guestLogin(@RequestBody GuestLoginRequest request) {
         // 1. Check if device exists, otherwise create it
+        if (request.getDeviceId() == null || request.getDeviceId().trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         Device device = deviceRepository.findByUniqueDeviceId(request.getDeviceId())
                 .orElseGet(() -> {
                     Device newDevice = Device.builder()
@@ -40,9 +44,11 @@ public class GuestAuthController {
              return ResponseEntity.status(403).build();
         }
 
-        // 2. Generate Token
-        // Ensure token is generated with correct claims for Guest Role
-        String token = jwtService.generateGuestToken(device.getUniqueDeviceId());
+        // 2. Generate Token with "GUEST_" prefix in subject to identify role
+        // The JwtService likely distinguishes roles via subject prefix or separate claim logic.
+        // Assuming generateToken handles "GUEST_" prefix convention used in VpnServerController.
+        String subject = "GUEST_" + device.getUniqueDeviceId();
+        String token = jwtService.generateToken(subject);
 
         // 3. Return Response
         return ResponseEntity.ok(new GuestLoginResponse(token, device.getUniqueDeviceId()));
