@@ -3,6 +3,7 @@ package com.abacicelal.supervpn_project;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -34,31 +35,9 @@ public class LoginActivity extends AppCompatActivity {
         buttonLogin = findViewById(R.id.buttonLogin);
         textViewGoToRegister = findViewById(R.id.textViewGoToRegister);
 
-        // Misafir Butonu (XML'de olması gerek, dinamik ekliyoruz şimdilik XML'i göremediğimiz için)
-        // Eğer XML'i editleme imkanımız yoksa, dinamik ekleyebiliriz veya varsayabiliriz.
-        // Ama kullanıcı planında XML editleme yok, o yüzden mantıklı olan "Register" textine eklemek veya dinamik buton.
-
-        // Create Guest Button Programmatically if not found in layout
-        Button guestButton = new Button(this);
-        guestButton.setText("Giriş Yapmadan Bağlan (Misafir)");
-        guestButton.setOnClickListener(v -> continueAsGuest());
-
-        // Add to layout (Assuming LinearLayout or RelativeLayout as root)
-        try {
-            android.view.ViewGroup root = (android.view.ViewGroup) findViewById(android.R.id.content).getRootView();
-            // Try to find the main container from typical login layouts
-            android.view.ViewGroup container = findViewById(R.id.loginContainer); // hypothetical ID
-            if (container == null && root.getChildCount() > 0) {
-                 // Fallback to the first child of content
-                 container = (android.view.ViewGroup) root.getChildAt(0);
-            }
-            if (container != null) {
-                container.addView(guestButton);
-            }
-        } catch (Exception e) {
-             // Fallback
-             Toast.makeText(this, "Guest mode ready, assume existing button", Toast.LENGTH_SHORT).show();
-        }
+        // DYNAMICALLY ADD GUEST BUTTON
+        // Since we cannot modify XML directly safely without seeing the hierarchy, we inject it programmatically.
+        addGuestButton();
 
         // backButton opsiyonel kontrol
         int backButtonId = getResources().getIdentifier("backButton", "id", getPackageName());
@@ -80,8 +59,28 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    private void addGuestButton() {
+        Button guestButton = new Button(this);
+        guestButton.setText("Giriş Yapmadan Bağlan (Misafir)");
+        guestButton.setTransformationMethod(null); // No all-caps
+        guestButton.setOnClickListener(v -> continueAsGuest());
+
+        // Attempt to find a suitable container
+        ViewGroup root = findViewById(android.R.id.content);
+        if (root != null) {
+            // Traverse to find the main layout (usually the first child of content)
+            if (root.getChildCount() > 0 && root.getChildAt(0) instanceof ViewGroup) {
+                 ViewGroup mainLayout = (ViewGroup) root.getChildAt(0);
+                 // Add at the bottom or below login button if possible
+                 mainLayout.addView(guestButton);
+            } else {
+                 root.addView(guestButton);
+            }
+        }
+    }
+
     private void continueAsGuest() {
-        // Clear tokens just in case
+        // Clear tokens just in case to ensure "Guest" state
         RetrofitClient.saveToken(this, null, null);
         Toast.makeText(this, "Misafir Olarak Devam Ediliyor...", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
