@@ -4,6 +4,7 @@ import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnConfigGenerationRequest;
 import com.celalabaci.dto.config.VpnConfigResponse;
 import com.celalabaci.entity.Device;
+import com.celalabaci.entity.Role;
 import com.celalabaci.entity.User;
 import com.celalabaci.entity.UserDevice;
 import com.celalabaci.entity.UserVpnConfig;
@@ -69,7 +70,7 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         // Speed Limit for Guest & Free Users (16Mbps = 2MB/s = 2000000 bytes)
         // Check if user is null (Guest) or Role is not PREMIUM
-        boolean isFreeTier = currentUser == null || (currentUser.getRole() != null && !currentUser.getRole().name().equals("PREMIUM") && !currentUser.getRole().name().equals("ADMIN") && !currentUser.getRole().name().equals("MODERATOR"));
+        boolean isFreeTier = currentUser == null || (currentUser.getRole() != Role.PREMIUM && currentUser.getRole() != Role.ADMIN && currentUser.getRole() != Role.MODERATOR);
 
         switch (request.getProtocol()) {
             case OPENVPN:

@@ -45,8 +45,6 @@ public class GuestAuthController {
         }
 
         // 2. Generate Token with "GUEST_" prefix in subject to identify role
-        // The JwtService likely distinguishes roles via subject prefix or separate claim logic.
-        // Assuming generateToken handles "GUEST_" prefix convention used in VpnServerController.
         String subject = "GUEST_" + device.getUniqueDeviceId();
         String token = jwtService.generateToken(subject);
 
