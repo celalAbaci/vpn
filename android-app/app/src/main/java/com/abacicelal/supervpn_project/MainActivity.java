@@ -56,14 +56,11 @@ import de.blinkt.openvpn.core.ConnectionStatus;
 import com.wireguard.android.backend.GoBackend;
 import com.wireguard.android.backend.Tunnel;
 import com.wireguard.config.Config;
-import com.wireguard.config.InetNetwork;
-import com.wireguard.config.Peer;
 import com.abacicelal.supervpn_project.utils.WireGuardTunnel;
 
 // Android Native IKEv2 (API 30+)
 import android.net.Ikev2VpnProfile;
 import android.net.VpnManager;
-import android.net.ipsec.ike.IkeSessionParams;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -82,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     private ImageButton menuButton;
     private ImageButton premiumButton;
     private ImageButton browserButton;
-    private ImageButton languageButton; // Added
+    private ImageButton languageButton;
     private ImageButton locationButton;
     private ImageButton helpButton;
     private Button protocolAuto, protocolIKEv2, protocolSuper, protocolOpenVPN;
@@ -237,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         menuButton = findViewById(R.id.menuButton);
         premiumButton = findViewById(R.id.premiumButton);
         browserButton = findViewById(R.id.browserButton);
-        languageButton = findViewById(R.id.languageButton); // Initialized
+        languageButton = findViewById(R.id.languageButton);
         locationButton = findViewById(R.id.locationButton);
         helpButton = findViewById(R.id.helpButton);
         sideMenu = findViewById(R.id.sideMenu);
@@ -277,12 +274,10 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         upgradePremiumButton.setOnClickListener(v -> startActivity(new Intent(this, PremiumActivity.class)));
         helpButton.setOnClickListener(v -> startActivity(new Intent(this, HelpSupportActivity.class)));
 
-        // Updated Browser Button Logic
         browserButton.setOnClickListener(v -> {
             startActivity(new Intent(this, BrowserActivity.class));
         });
 
-        // Language Button Logic
         languageButton.setOnClickListener(v -> showLanguageSelectionDialog());
     }
 
@@ -319,13 +314,10 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             @Override
             public void onResponse(Call<GuestLoginResponse> call, Response<GuestLoginResponse> response) {
                  if (response.isSuccessful() && response.body() != null) {
-                     // Store the Guest JWT token. RetrofitClient will pick this up for subsequent requests.
+                     // Store the Guest JWT token
                      GuestLoginResponse authData = response.body();
                      RetrofitClient.saveToken(MainActivity.this, authData.getToken(), null);
 
-                     // Guest Login Successful. Directly proceed to fetch config.
-                     // Guests don't have "MyDevices" usually in the same way, or it returns empty.
-                     // We can skip fetching devices and directly go to fetchVpnConfig with guestDeviceId.
                      fetchVpnConfigForGuest(uniqueId);
                  } else {
                      handleConnectionFailure(getString(R.string.connection_failed) + " (Guest Auth Error: " + response.code() + ")");
@@ -393,9 +385,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
-                // Handle success response even if data is null/empty
                 if (response.isSuccessful() && response.body() != null) {
-                    // Treat null data as empty list
                     List<Subscription> subs = response.body().getData();
                     boolean hasActive = false;
                     if (subs != null) {
@@ -408,12 +398,10 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                     }
 
                     if (hasActive) {
-                        // Premium kullanıcı: Premium butonlarını gizle
                         if (premiumButton != null) premiumButton.setVisibility(View.GONE);
                         if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.GONE);
                         if (menuAccount != null) menuAccount.setText(getString(R.string.account_title) + " (Premium)");
                     } else {
-                        // Free kullanıcı: Premium butonlarını göster
                         if (premiumButton != null) premiumButton.setVisibility(View.VISIBLE);
                         if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.VISIBLE);
                          if (menuAccount != null) menuAccount.setText(getString(R.string.account_title) + " (Free)");
@@ -446,7 +434,6 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                         }
                     }
                     if (hasActive) {
-                        // Bağlantı öncesi kontrol başarılı, UI'ı da güncelle
                         if (premiumButton != null) premiumButton.setVisibility(View.GONE);
                         if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.GONE);
 
@@ -457,17 +444,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                         handleConnectionFailure(null);
                     }
                 } else {
-                    String errorMsg = getString(R.string.error_subscription_check);
-                    try {
-                        if (response.errorBody() != null) {
-                            errorMsg += " " + response.errorBody().string();
-                        } else {
-                            errorMsg += " Code: " + response.code();
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error reading error body", e);
-                    }
-                    handleConnectionFailure(errorMsg);
+                    handleConnectionFailure(getString(R.string.error_subscription_check) + " Code: " + response.code());
                 }
             }
 
@@ -548,7 +525,6 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                 return;
             }
 
-            // 1. Parse Config
             ConfigParser cp = new ConfigParser();
             cp.parseConfig(new StringReader(configContent));
             VpnProfile vp = cp.convertProfile();
@@ -558,39 +534,31 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                 return;
             }
 
-            // Set profile name
             String serverName = sharedPreferences.getString(KEY_SELECTED_SERVER_NAME, "Server");
             vp.mName = "SuperVPN " + serverName;
 
-            // 2. Set as temporary profile
             ProfileManager.getInstance(this).setTemporaryProfile(this, vp);
 
-            // Save config if we need to wait for permission
             mPendingConfig = configContent;
 
-            // 3. Check Permissions
             Intent intent = VpnService.prepare(this);
             if (intent != null) {
                 startActivityForResult(intent, VPN_PERMISSION_REQUEST_CODE);
             } else {
-                // 4. Start VPN
                 startEmbeddedVpn(vp);
             }
 
         } catch (Exception e) {
             Log.e(TAG, "OpenVPN Config Error", e);
-            Toast.makeText(this, "OpenVPN Başlatma Hatası: " + e.getMessage(), Toast.LENGTH_LONG).show();
             handleConnectionFailure("Ayar Hatası: " + e.getMessage());
         }
     }
 
     private void startEmbeddedVpn(VpnProfile vp) {
         try {
-            // Fix: Check if required options are allowed or add them
             if (vp.mCustomConfigOptions == null) {
                 vp.mCustomConfigOptions = "";
             }
-            // Add custom options to avoid parsing errors in native lib
             if (!vp.mCustomConfigOptions.contains("block-outside-dns")) {
                  vp.mCustomConfigOptions += "ignore-unknown-option block-outside-dns\n";
             }
@@ -599,7 +567,6 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             }
 
             VPNLaunchHelper.startOpenVpn(vp, this, "VPN_CONNECT", false);
-            // Clean pending config
             mPendingConfig = null;
         } catch (Exception e) {
             Log.e(TAG, "Error starting embedded VPN: ", e);
@@ -612,23 +579,15 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == VPN_PERMISSION_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                // Permission granted
                 if (mPendingConfig != null) {
-                    // Retry starting based on protocol
                     if (selectedProtocol == VpnProtocol.OPENVPN) {
                         startOpenVpn(mPendingConfig);
                     } else if (selectedProtocol == VpnProtocol.SUPER) {
                          startSuper(mPendingConfig);
                     } else if (selectedProtocol == VpnProtocol.IKEV2) {
-                         // For IKEv2, the system starts it after permission, but we might need to re-trigger
-                         // if we used the provision intent. However, startProvisionedVpnProfileSession
-                         // usually needs to be called again or it auto-starts.
-                         // Let's safe-call it.
                          startIkev2(mPendingConfig);
                     }
                 } else {
-                     // Pending config null means maybe IKEv2 started directly?
-                     // Or just generic success.
                      Toast.makeText(this, "Permission granted. Connecting...", Toast.LENGTH_SHORT).show();
                 }
             } else {
@@ -650,35 +609,30 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
 
         try {
             String serverAddr = "";
-            String identity = ""; // ID usually matches username or cert CN
             String username = "";
             String password = "";
 
-            // Simple line-based parsing
             String[] lines = configContent.split("\n");
             for (String line : lines) {
                 if (line.startsWith("Server: ")) serverAddr = line.replace("Server: ", "").trim();
                 else if (line.startsWith("User: ")) username = line.replace("User: ", "").trim();
                 else if (line.startsWith("Pass: ")) password = line.replace("Pass: ", "").trim();
             }
-            identity = username; // Assuming identity is same as username for EAP
+            String identity = username;
 
             if (serverAddr.isEmpty()) {
                 handleConnectionFailure(getString(R.string.ikev2_config_error));
                 return;
             }
 
-            // Native Android IKEv2 Setup (API 30+)
             VpnManager vpnManager = (VpnManager) getSystemService(Context.VPN_MANAGEMENT_SERVICE);
 
             Ikev2VpnProfile.Builder profileBuilder = new Ikev2VpnProfile.Builder(serverAddr, identity);
             profileBuilder.setAuthUsernamePassword(username, password, null);
-            // profileBuilder.setBypassable(false); // Optional
 
             Ikev2VpnProfile profile = profileBuilder.build();
 
-            // Provisioning
-            mPendingConfig = configContent; // Save just in case
+            mPendingConfig = configContent;
             Intent intent = vpnManager.provisionVpnProfile(profile);
             if (intent != null) {
                 startActivityForResult(intent, VPN_PERMISSION_REQUEST_CODE);
@@ -733,22 +687,16 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                  return;
             }
 
-            // 1. Parse Config
-            // ConfigParser reads InputStream. configContent is string.
             Config config = Config.parse(new StringReader(configContent));
 
-            // 2. Create/Get Tunnel
             String tunnelName = "super_wg_tunnel";
             if (wireGuardTunnel == null) {
                 wireGuardTunnel = new WireGuardTunnel(tunnelName);
             }
 
-            // 3. Connect
-            // Note: setState is async.
-            // Ensure permission first.
             Intent intent = GoBackend.VpnService.prepare(this);
             if (intent != null) {
-                mPendingConfig = configContent; // Save for retry
+                mPendingConfig = configContent;
                 startActivityForResult(intent, VPN_PERMISSION_REQUEST_CODE);
                 return;
             }
@@ -765,7 +713,6 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     private void disconnectVPN() {
         try {
             if (selectedProtocol == VpnProtocol.OPENVPN) {
-                // Sending stop service intent to OpenVPNService
                 Intent intent = new Intent(this, de.blinkt.openvpn.core.OpenVPNService.class);
                 stopService(intent);
             } else if (selectedProtocol == VpnProtocol.SUPER) {
@@ -792,7 +739,6 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         if (message != null) Toast.makeText(this, getString(R.string.connection_failed), Toast.LENGTH_SHORT).show();
     }
 
-    // Renamed from simulateConnectionSuccess to handleConnectionSuccess
     private void handleConnectionSuccess() {
         isConnected = true;
         isConnecting = false;
@@ -802,7 +748,6 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         updateUIOnConnectionState();
     }
 
-    // New helper to centralize disconnection UI logic
     private void handleConnectionDisconnected() {
         isConnecting = false;
         isConnected = false;
@@ -811,7 +756,6 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         updateUIOnConnectionState();
     }
 
-    // UI & Animasyon Yardımcıları
     private void toggleSideMenu() {
         if (sideMenu.getVisibility() == View.GONE) {
             sideMenu.setVisibility(View.VISIBLE);
@@ -918,7 +862,6 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             loadingSpinner.setVisibility(View.GONE);
             connectButton.setBackgroundResource(R.drawable.btn_round_connected);
             connectionStatusLabel.setText(getString(R.string.status_label_connected));
-            // Re-implementing:
             String currentText = currentServerInfo.getText().toString();
             statusSafeText.setText(currentText);
         } else {
