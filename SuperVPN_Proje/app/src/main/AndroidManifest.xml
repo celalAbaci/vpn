@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:allowBackup="true"
         android:fullBackupContent="false"
@@ -43,10 +44,11 @@
         <service
             android:name="de.blinkt.openvpn.core.OpenVPNService"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.net.VpnService" />
-            </intent-filter>
+            android:exported="true"
+            android:foregroundServiceType="specialUse"> <intent-filter>
+            <action android:name="android.net.VpnService" />
+        </intent-filter>
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="vpn" />
         </service>
 
         <!-- Necessary activities for the library if it exposes them,
@@ -54,6 +56,10 @@
              If the library re-uses de.blinkt namespace (which it often does as a fork),
              we keep the service declaration. kaikelmax library uses de.blinkt.openvpn.core.OpenVPNService internally.
         -->
+        <service
+            android:name="de.blinkt.openvpn.core.keepVPNAlive"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true"/>
 
     </application>
 </manifest>
