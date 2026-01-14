@@ -23,13 +23,15 @@ public class UserVpnConfig extends BaseEntity {
     @Column(name = "protocol", nullable = false)
     private VpnProtocol protocol;
 
-    // Config dosyasının içeriği (OVPN metni, WireGuard conf vb.)
-    // TEXT tipinde tutulmalı çünkü uzun olabilir.
     @Lob
     @Column(name = "config_content", nullable = false, columnDefinition = "TEXT")
     private String configContent;
 
-    // V2Ray için UUID veya WireGuard için Public Key gibi ek bilgiler
     @Column(name = "identifier_key")
     private String identifierKey;
+
+    // --- EKLENEN KISIM ---
+    // Bu alan eksik olduğu için hata alıyordun.
+    @Column(name = "is_active")
+    private boolean active = true;
 }

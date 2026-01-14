@@ -29,7 +29,9 @@ public class VpnServerServiceImpl implements IVpnServerService {
 
     @Override
     public List<VpnServerDto> getActiveServersForUsers() {
-        return vpnServerRepository.findByIsActiveTrue().stream()
+        // --- DÜZELTME BURASI ---
+        // Hata veren 'findByIsActiveTrue()' yerine 'findByActiveTrue()' kullanıldı.
+        return vpnServerRepository.findByActiveTrue().stream()
                 .map(vpnServerMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -67,13 +69,11 @@ public class VpnServerServiceImpl implements IVpnServerService {
     public VpnServerDto updateServer(Long id, VpnServerCreateUpdateDto dto) {
         VpnServer existingServer = findServerById(id);
 
-        // IP adresi değiştiriliyorsa ve yeni IP başkası tarafından kullanılıyorsa hata ver
         if (!existingServer.getServerIpAddress().equalsIgnoreCase(dto.getServerIpAddress()) &&
                 vpnServerRepository.existsByServerIpAddressIgnoreCase(dto.getServerIpAddress())) {
             throw new BaseException(MessageType.GENERAL_EXCEPTION, "A server with IP " + dto.getServerIpAddress() + " already exists.");
         }
 
-        // Eğer ülke değiştirilmek isteniyorsa, yeni ülkeyi bul ve ata
         if (!existingServer.getCountry().getId().equals(dto.getCountryId())) {
             Country newCountry = findCountryById(dto.getCountryId());
             existingServer.setCountry(newCountry);
@@ -92,7 +92,6 @@ public class VpnServerServiceImpl implements IVpnServerService {
         vpnServerRepository.deleteById(id);
     }
 
-    // Helper methods to avoid code duplication
     private VpnServer findServerById(Long id) {
         return vpnServerRepository.findById(id)
                 .orElseThrow(() -> new BaseException(MessageType.NO_RECORD_EXIST, "VPN Server with id " + id + " not found."));
