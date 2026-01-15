@@ -96,6 +96,21 @@ public class ConfigParser {
         }
         else if (option.equals("client")) {
             // Client modu, işlem yapmaya gerek yok
+            mResult.mUsePull = true;
+        }
+        else if (option.equals("auth")) {
+            if (parts.length > 1) mResult.mAuth = parts[1];
+        }
+        else if (option.equals("cipher") || option.equals("data-ciphers")) {
+            if (parts.length > 1) mResult.mCipher = parts[1];
+        }
+        else if (option.equals("remote-cert-tls") || option.equals("verify-x509-name")) {
+            mResult.mCheckRemoteCN = true;
+        }
+        else if (option.equals("shaper")) {
+            // Backend sends shaper for bandwidth limiting.
+            // We parse it to ensure it doesn't cause errors,
+            // even if pure client-side shaper support depends on the binary.
         }
     }
 

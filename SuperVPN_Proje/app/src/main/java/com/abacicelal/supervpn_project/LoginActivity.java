@@ -69,13 +69,52 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void continueAsGuest() {
-        // Clear tokens just in case
-        RetrofitClient.saveToken(this, null, null);
-        Toast.makeText(this, "Misafir Olarak Devam Ediliyor...", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+        // Perform Guest Login against Backend
+        String deviceId = com.abacicelal.supervpn_project.utils.DeviceIdManager.getDeviceId(this);
+        String deviceName = android.os.Build.MODEL;
+
+        if (buttonLogin != null) {
+            buttonLogin.setEnabled(false);
+            buttonLogin.setText("Misafir Girişi...");
+        }
+
+        com.abacicelal.supervpn_project.remote.model.GuestLoginRequest request =
+            new com.abacicelal.supervpn_project.remote.model.GuestLoginRequest(deviceId, deviceName);
+
+        RetrofitClient.getApiService(this).guestLogin(request).enqueue(new Callback<AuthResponse>() {
+            @Override
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+                if (buttonLogin != null) {
+                    buttonLogin.setEnabled(true);
+                    buttonLogin.setText("GİRİŞ YAP");
+                }
+
+                if (response.isSuccessful() && response.body() != null) {
+                    // Save Guest Token
+                    RetrofitClient.saveToken(LoginActivity.this,
+                            response.body().getAccessToken(),
+                            null); // Guests might not have refresh token
+
+                    Toast.makeText(LoginActivity.this, "Misafir Girişi Başarılı!", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+                } else {
+                     Toast.makeText(LoginActivity.this, "Misafir girişi başarısız!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                if (buttonLogin != null) {
+                    buttonLogin.setEnabled(true);
+                    buttonLogin.setText("GİRİŞ YAP");
+                }
+                Toast.makeText(LoginActivity.this, "Bağlantı hatası: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void handleLogin() {

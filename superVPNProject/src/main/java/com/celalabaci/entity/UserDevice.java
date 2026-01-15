@@ -20,6 +20,9 @@ public class UserDevice extends BaseEntity {
     @Column(name = "device_name", nullable = false, length = 100)
     private String deviceName;
 
+    @Column(name = "unique_device_id", nullable = false, unique = true, length = 100)
+    private String uniqueDeviceId;
+
     @Column(name = "last_seen", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime lastSeen;
 

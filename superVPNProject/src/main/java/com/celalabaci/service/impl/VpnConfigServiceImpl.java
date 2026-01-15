@@ -68,6 +68,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("ignore-unknown-option block-outside-dns\n");
             sb.append("verb 3\n");
 
+            // Speed Limit for Non-Premium Users (Guest or Free)
+            boolean isPremium = currentUser != null && currentUser.getRole() == com.celalabaci.entity.Role.PREMIUM;
+            if (!isPremium) {
+                sb.append("shaper 2000000\n"); // Limit to ~2MB/s (16Mbps)
+                sb.append("ignore-unknown-option shaper\n");
+            }
+
             if (ovpn.getCaCert() != null)
                 sb.append("<ca>\n").append(ovpn.getCaCert()).append("\n</ca>\n");
 
@@ -88,9 +95,11 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         // Loglama
         try {
-            if (currentUser != null) {
+            // Log if user exists OR if device exists (Guest)
+            if ((currentUser != null && currentUser.getId() != null) || device != null) {
                 UserVpnConfig logRecord = new UserVpnConfig();
-                logRecord.setUser(currentUser);
+                logRecord.setUser((currentUser != null && currentUser.getId() != null) ? currentUser : null);
+                logRecord.setDevice(device); // Log the device!
                 logRecord.setServer(entryServer);
                 logRecord.setConfigContent(configContent);
 
