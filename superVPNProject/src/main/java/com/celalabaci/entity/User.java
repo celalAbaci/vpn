@@ -42,6 +42,9 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "is_enabled", nullable = false)
     private boolean isEnabled = true;
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<UserDevice> devices;
+
     // UserDetails Metotları
 
     @Override

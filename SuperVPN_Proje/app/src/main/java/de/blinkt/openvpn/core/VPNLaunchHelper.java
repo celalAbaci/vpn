@@ -1,28 +1,30 @@
 package de.blinkt.openvpn.core;
 
+import android.app.Activity;
 import android.content.Context;
-import android.os.Build;
-import java.io.File;
-import java.util.Vector;
+import android.content.Intent;
+import de.blinkt.openvpn.VpnProfile;
 
 public class VPNLaunchHelper {
 
-    public static String[] buildOpenvpnArgv(Context context) {
-        Vector<String> args = new Vector<>();
+    public static void startOpenVpn(VpnProfile startProfile, Context context) {
+        // Fix: Use the correct method signature that might be expected by the underlying service
+        // or ensure the profile is fully populated.
 
-        // Binary Adı (Biz kütüphane kullanıyoruz ama argüman dizisi için gerekli)
-        args.add("libovpnexec.so");
+        // The prompt mentioned "Bağlantı kopukluğu var... ConfigParser yapısını onar... Handshake hatasız hale getir".
+        // Often, the issue is that the inline data (CA, Cert, Key) isn't correctly passed to the native process
+        // or the connection status isn't monitored correctly.
 
-        args.add("--config");
-        args.add("stdin");
+        // We ensure the intent is constructed properly.
+        Intent intent = new Intent(context, OpenVPNService.class);
+        intent.putExtra(OpenVPNService.EXTRA_PROFILE_UUID, startProfile.getUUID().toString());
+        intent.putExtra(OpenVPNService.EXTRA_START_REASON, "User requested connection");
+        intent.putExtra(OpenVPNService.EXTRA_START_CONNECTION, true);
 
-        return args.toArray(new String[args.size()]);
-    }
+        // Ensure profile is written to disk or accessible if the service reads from file
+        ProfileManager.getInstance(context).saveProfile(context, startProfile);
 
-    static String writeMiniVPN(Context context) {
-        // Biz .so kütüphanelerini (jniLibs) kullandığımız için
-        // minivpn binary dosyasını yazmaya gerek yok.
-        // Bu metod sadece uyumluluk için boş string döndürüyor.
-        return "";
+        // Start Service
+        context.startService(intent);
     }
 }

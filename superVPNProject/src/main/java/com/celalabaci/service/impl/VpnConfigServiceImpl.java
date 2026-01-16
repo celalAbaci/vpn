@@ -38,9 +38,31 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
         VpnServer entryServer = vpnServerRepository.findById(request.getEntryServerId())
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Sunucu bulunamadı"));
 
+        // Device Lookup Logic
         UserDevice device = null;
-        if (currentUser != null && request.getDeviceId() != null) {
-            device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+        boolean isGuest = false;
+
+        if (request.getGuestDeviceId() != null) {
+            // Guest User Lookup
+            device = userDeviceRepository.findByUniqueDeviceId(request.getGuestDeviceId()).orElse(null);
+            isGuest = true;
+        } else if (currentUser != null && request.getDeviceId() != null) {
+            // Logged-in User Lookup (Standard)
+            // If currentUser is our transient Guest user (GUEST_ prefix), we might not find device by ID if user ID is null in DB
+            // But usually logged in means via Token, which has ID if it's a real user.
+            // If it's a guest token, it has "GUEST_xxx" username.
+            if (currentUser.getUsername().startsWith("GUEST_")) {
+                isGuest = true;
+                // Try to find by unique ID if passed, or extract from username?
+                // Ideally request should send guestDeviceId.
+            } else {
+                device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+            }
+        }
+
+        // Check Access Rights
+        if (isGuest && !entryServer.isFree()) {
+             throw new ConfigGenerationException(MessageType.GENERAL_EXCEPTION, "Guest users can only access Free servers.");
         }
 
         String configContent = "";
@@ -66,6 +88,15 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("remote-cert-tls server\n");
             sb.append("auth SHA512\n");
             sb.append("ignore-unknown-option block-outside-dns\n");
+            sb.append("ignore-unknown-option shaper\n"); // Ensure Android client ignores it if not supported
+
+            // Speed Limit Logic
+            // 16 Mbit = 2 MB/s = 2000000 Bytes/s
+            if (isGuest || (currentUser != null && currentUser.getRole() == com.celalabaci.entity.Role.USER)) {
+                // Free users and Guests get limited
+                sb.append("shaper 2000000\n");
+            }
+
             sb.append("verb 3\n");
 
             if (ovpn.getCaCert() != null)

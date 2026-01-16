@@ -20,4 +20,5 @@ public class VpnConfigGenerationRequest {
     // Opsiyonel alanlar (Android göndermese de sorun olmaz)
     private CustomDnsProvider dnsProvider;
     private Long exitServerId;
+    private String guestDeviceId; // For guest lookups
 }

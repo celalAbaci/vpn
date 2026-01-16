@@ -55,4 +55,11 @@ public class ConfigGenerationRequest {
             this.dnsProvider = null;
         }
     }
+
+    @SerializedName("guestDeviceId")
+    private String guestDeviceId;
+
+    public void setGuestDeviceId(String guestDeviceId) {
+        this.guestDeviceId = guestDeviceId;
+    }
 }

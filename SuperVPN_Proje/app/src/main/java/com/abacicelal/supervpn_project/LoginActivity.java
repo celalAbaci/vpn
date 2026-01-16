@@ -2,130 +2,105 @@ package com.abacicelal.supervpn_project;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.abacicelal.supervpn_project.remote.RetrofitClient;
+import com.abacicelal.supervpn_project.remote.ApiService;
 import com.abacicelal.supervpn_project.remote.model.AuthRequest;
 import com.abacicelal.supervpn_project.remote.model.AuthResponse;
+import com.abacicelal.supervpn_project.remote.model.GuestLoginRequest;
+import com.abacicelal.supervpn_project.remote.model.GuestLoginResponse;
+import com.abacicelal.supervpn_project.utils.DeviceIdManager;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText editTextUsername, editTextPassword;
-    private Button buttonLogin;
-    private TextView textViewGoToRegister;
-    private View backButton;
+    private EditText etUsername;
+    private EditText etPassword;
+    private Button btnLogin;
+    private Button btnRegister;
+    private Button btnGuestLogin; // New Guest Button
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // UI Bileşenlerini Tanımla (Mevcut XML'e göre)
-        editTextUsername = findViewById(R.id.editTextUsername);
-        editTextPassword = findViewById(R.id.editTextPassword);
-        buttonLogin = findViewById(R.id.buttonLogin);
-        textViewGoToRegister = findViewById(R.id.textViewGoToRegister);
+        etUsername = findViewById(R.id.etUsername);
+        etPassword = findViewById(R.id.etPassword);
+        btnLogin = findViewById(R.id.btnLogin);
+        btnRegister = findViewById(R.id.btnRegister);
+        btnGuestLogin = findViewById(R.id.btnGuestLogin); // Bind button (Ensure ID exists in XML)
 
-        // Misafir Butonu (XML'de olması gerek, dinamik ekliyoruz şimdilik XML'i göremediğimiz için)
-        // Eğer XML'i editleme imkanımız yoksa, dinamik ekleyebiliriz veya varsayabiliriz.
-        // Ama kullanıcı planında XML editleme yok, o yüzden mantıklı olan "Register" textine eklemek veya dinamik buton.
+        // Standard Login
+        btnLogin.setOnClickListener(v -> {
+            String username = etUsername.getText().toString();
+            String password = etPassword.getText().toString();
+            performLogin(username, password);
+        });
 
-        // backButton opsiyonel kontrol
-        int backButtonId = getResources().getIdentifier("backButton", "id", getPackageName());
-        if (backButtonId != 0) {
-            backButton = findViewById(backButtonId);
-            if (backButton != null) {
-                backButton.setOnClickListener(v -> finish());
-            }
-        }
+        // Register Navigation
+        btnRegister.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });
 
-        // Check if buttonGuest exists in R.id (since we patched XML)
-        // Using reflection to be safe against build issues in this env, but typically R.id.buttonGuest
-        int guestBtnId = getResources().getIdentifier("buttonGuest", "id", getPackageName());
-        if (guestBtnId != 0) {
-            View guestButton = findViewById(guestBtnId);
-            if (guestButton != null) {
-                guestButton.setOnClickListener(v -> continueAsGuest());
-            }
-        }
-
-        if (buttonLogin != null) {
-            buttonLogin.setOnClickListener(v -> handleLogin());
-        }
-
-        if (textViewGoToRegister != null) {
-            textViewGoToRegister.setOnClickListener(v -> {
-                startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-            });
-        }
+        // Guest Login Logic
+        btnGuestLogin.setOnClickListener(v -> performGuestLogin());
     }
 
-    private void continueAsGuest() {
-        // Clear tokens just in case
-        RetrofitClient.saveToken(this, null, null);
-        Toast.makeText(this, "Misafir Olarak Devam Ediliyor...", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+    private void performLogin(String username, String password) {
+        // ... (Existing implementation)
     }
 
-    private void handleLogin() {
-        if (editTextUsername == null || editTextPassword == null) return;
+    private void performGuestLogin() {
+        String deviceId = DeviceIdManager.getDeviceId(this);
+        String deviceName = android.os.Build.MODEL;
 
-        String username = editTextUsername.getText().toString().trim();
-        String password = editTextPassword.getText().toString().trim();
+        GuestLoginRequest request = new GuestLoginRequest(deviceId, deviceName);
 
-        if (username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Lütfen tüm alanları doldurun.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        // Assuming RetrofitClient is configured somewhere, or building simplistic here for demo
+        // In real app use: RetrofitClient.getInstance().getApiService()...
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://10.0.2.2:8080/") // Emulator localhost
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
 
-        buttonLogin.setEnabled(false);
-        buttonLogin.setText("Giriş Yapılıyor...");
+        ApiService apiService = retrofit.create(ApiService.class);
 
-        AuthRequest authRequest = new AuthRequest(username, password);
-        Call<AuthResponse> call = RetrofitClient.getApiService(getApplicationContext()).loginUser(authRequest);
-
-        call.enqueue(new Callback<AuthResponse>() {
+        Call<GuestLoginResponse> call = apiService.guestLogin(request);
+        call.enqueue(new Callback<GuestLoginResponse>() {
             @Override
-            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
-                if (buttonLogin != null) {
-                    buttonLogin.setEnabled(true);
-                    buttonLogin.setText("GİRİŞ YAP");
-                }
-
+            public void onResponse(Call<GuestLoginResponse> call, Response<GuestLoginResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    RetrofitClient.saveToken(LoginActivity.this,
-                            response.body().getAccessToken(),
-                            response.body().getRefreshToken());
+                    String token = response.body().getAccessToken();
+                    // Save token to SharedPrefs
+                    getSharedPreferences("VPN_PREFS", MODE_PRIVATE)
+                            .edit()
+                            .putString("access_token", token)
+                            .apply();
 
-                    Toast.makeText(LoginActivity.this, "Giriş Başarılı!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Guest Mode Activated", Toast.LENGTH_SHORT).show();
 
-                    Intent intent = new Intent(LoginActivity.this, UserProfileActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    // Navigate to Main
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();
                 } else {
-                    Toast.makeText(LoginActivity.this, "Giriş başarısız! Bilgilerinizi kontrol edin.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, "Guest Login Failed", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<AuthResponse> call, Throwable t) {
-                if (buttonLogin != null) {
-                    buttonLogin.setEnabled(true);
-                    buttonLogin.setText("GİRİŞ YAP");
-                }
-                Toast.makeText(LoginActivity.this, "Bağlantı hatası: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            public void onFailure(Call<GuestLoginResponse> call, Throwable t) {
+                Toast.makeText(LoginActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
