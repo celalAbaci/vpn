@@ -33,18 +33,26 @@ public class ConfigParser {
         String inlineFileTag = "";
 
         while ((line = mReader.readLine()) != null) {
-            if (line.trim().isEmpty() || line.startsWith("#") || line.startsWith(";"))
+            line = line.trim();
+            if (line.isEmpty() || line.startsWith("#") || line.startsWith(";"))
                 continue;
 
             // <ca>, <cert> vb. inline blokları yakala
-            if (line.trim().startsWith("<") && !line.trim().startsWith("</")) {
+            if (line.startsWith("<") && !line.startsWith("</")) {
                 inInlineFile = true;
-                inlineFileTag = line.trim().substring(1, line.trim().indexOf('>'));
-                inlineFileBuffer = new StringBuilder();
+                int endIndex = line.indexOf('>');
+                if (endIndex != -1) {
+                    inlineFileTag = line.substring(1, endIndex);
+                    inlineFileBuffer = new StringBuilder();
+                    // Handle case where content follows tag immediately
+                    if (line.length() > endIndex + 1) {
+                         inlineFileBuffer.append(line.substring(endIndex + 1)).append("\n");
+                    }
+                }
                 continue;
             }
 
-            if (line.trim().startsWith("</")) {
+            if (line.startsWith("</")) {
                 inInlineFile = false;
                 String content = inlineFileBuffer.toString();
 
@@ -65,18 +73,20 @@ public class ConfigParser {
             // Normal ayarları işle
             parseLine(line);
         }
-
-        // Tüm config içeriğini inline olarak sakla (Garanti olsun diye)
-        try {
-            reader.reset();
-            // Reset çalışmazsa diye buffer'dan okumak daha güvenli ama
-            // şimdilik basit tutuyoruz, MainActivity'den gelen string zaten tam config.
-        } catch (IOException e) {
-            // ignore
-        }
     }
 
     private void parseLine(String line) {
+        // Handle options
+        // Safely ignore unknown options requested by the user, like shaper
+        if (line.startsWith("ignore-unknown-option")) {
+            return;
+        }
+
+        // Explicitly ignore shaper if it appears alone (handled by OpenVPN usually but good to be safe)
+        if (line.startsWith("shaper")) {
+            return;
+        }
+
         String[] parts = line.split("\\s+");
         if (parts.length == 0) return;
 
@@ -86,7 +96,7 @@ public class ConfigParser {
             mResult.mConnections[0].mServerName = parts[1];
             mResult.mConnections[0].mServerPort = parts[2];
             if (parts.length > 3) {
-                mResult.mConnections[0].mUseUdp = parts[3].equals("udp");
+                mResult.mConnections[0].mUseUdp = parts[3].equalsIgnoreCase("udp");
             }
         }
         else if (option.equals("proto")) {
@@ -94,17 +104,21 @@ public class ConfigParser {
                 mResult.mConnections[0].mUseUdp = parts[1].toLowerCase().contains("udp");
             }
         }
+        else if (option.equals("cipher")) {
+             if (parts.length > 1) mResult.mCipher = parts[1];
+        }
+        else if (option.equals("auth")) {
+             if (parts.length > 1) mResult.mAuth = parts[1];
+        }
+        else if (option.equals("remote-cert-tls")) {
+             if (parts.length > 1) mResult.mExpectTLSCert = parts[1].equals("server");
+        }
         else if (option.equals("client")) {
-            // Client modu, işlem yapmaya gerek yok
+            // Client mode
         }
     }
 
     public VpnProfile convertProfile() {
-        // Profilin tamamlanmış halini döndür
-        // MainActivity'deki startOpenVpn metodunda configContent 
-        // mInlineConfig içine yazılmalı.
         return mResult;
     }
-
-    // Orijinal koddaki eksik metodu bypass etmek için bu sınıfı güncelledik.
 }

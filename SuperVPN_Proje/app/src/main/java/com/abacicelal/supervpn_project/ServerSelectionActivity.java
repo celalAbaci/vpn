@@ -23,6 +23,7 @@ import com.abacicelal.supervpn_project.remote.ApiService;
 import com.abacicelal.supervpn_project.remote.RetrofitClient;
 import com.abacicelal.supervpn_project.remote.model.ApiResponse;
 import com.abacicelal.supervpn_project.remote.model.Server;
+import com.abacicelal.supervpn_project.remote.model.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ServerSelectionActivity extends AppCompatActivity {
-    private static final String TAG = "ServerSelectionActivity"; // Loglama için
+    private static final String TAG = "ServerSelectionActivity";
     private RecyclerView serverRecyclerView;
     private ServerAdapter serverAdapter;
     private ImageButton backButton;
@@ -40,22 +41,21 @@ public class ServerSelectionActivity extends AppCompatActivity {
 
     private List<Server> serverList = new ArrayList<>();
     private ApiService apiService;
+    private boolean isPremium = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server_selection);
 
-        // --- ÇÖZÜM: TOKEN KONTROLÜ EKLENDİ ---
-        // Kullanıcı giriş yapmamışsa, bu ekranı hiç gösterme.
+        // --- AUTH CHECK ---
         if (RetrofitClient.getToken(this) == null) {
-            Toast.makeText(this, "Lütfen önce giriş yapın", Toast.LENGTH_LONG).show();
-            Intent intent = new Intent(this, AccountActivity.class);
-            startActivity(intent);
-            finish(); // Bu Activity'yi kapat
-            return; // onCreate metodunun geri kalanını çalıştırma
+             Toast.makeText(this, "Lütfen önce giriş yapın", Toast.LENGTH_LONG).show();
+             Intent intent = new Intent(this, LoginActivity.class);
+             startActivity(intent);
+             finish();
+             return;
         }
-        // --- ÇÖZÜM BİTTİ ---
 
         serverRecyclerView = findViewById(R.id.serverRecyclerView);
         backButton = findViewById(R.id.backButton);
@@ -65,65 +65,105 @@ public class ServerSelectionActivity extends AppCompatActivity {
 
         setupRecyclerView();
 
-        // Geri butonu işlevi
         backButton.setOnClickListener(v -> finish());
 
-        // Sunucuları backend'den çek
-        fetchActiveServers();
+        checkSubscriptionAndFetchServers();
     }
 
     private void setupRecyclerView() {
         serverRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        serverAdapter = new ServerAdapter(serverList, this);
+        serverAdapter = new ServerAdapter(serverList, this, isPremium);
         serverRecyclerView.setAdapter(serverAdapter);
+    }
+
+    private void checkSubscriptionAndFetchServers() {
+        loadingBar.setVisibility(View.VISIBLE);
+
+        apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                     List<Subscription> subs = response.body().getData();
+                     if (subs != null) {
+                         for (Subscription s : subs) {
+                             if (s.isActive()) {
+                                 isPremium = true;
+                                 break;
+                             }
+                         }
+                     }
+                }
+                serverAdapter.setPremiumStatus(isPremium);
+                fetchActiveServers();
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Subscription>>> call, Throwable t) {
+                fetchActiveServers();
+            }
+        });
     }
 
     private void fetchActiveServers() {
         Log.d(TAG, "Aktif sunucular çekiliyor...");
-        loadingBar.setVisibility(View.VISIBLE);
-        serverRecyclerView.setVisibility(View.GONE);
 
         apiService.getActiveServers().enqueue(new Callback<ApiResponse<List<Server>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Server>>> call, Response<ApiResponse<List<Server>>> response) {
                 loadingBar.setVisibility(View.GONE);
-                serverRecyclerView.setVisibility(View.VISIBLE);
 
-                if (response.isSuccessful() && response.body() != null) {
-                    if (response.body().isSuccess() && response.body().getData() != null) {
-                        Log.d(TAG, response.body().getData().size() + " adet sunucu başarıyla çekildi.");
-                        serverList.clear();
-                        serverList.addAll(response.body().getData());
-                        serverAdapter.notifyDataSetChanged();
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    serverList.clear();
+                    List<Server> allServers = response.body().getData();
+
+                    if (!isPremium) {
+                        // Show only "Free" servers
+                        for (Server s : allServers) {
+                            if (s.isFree()) {
+                                serverList.add(s);
+                            }
+                        }
+
+                        // Fallback: If no servers marked free, maybe show a limited amount or inform user
+                        if (serverList.isEmpty()) {
+                            // Backup logic: top 3
+                             int limit = Math.min(allServers.size(), 3);
+                             serverList.addAll(allServers.subList(0, limit));
+                        }
+
+                        // Use a toast to inform user
+                        Toast.makeText(ServerSelectionActivity.this, "Free User: Showing limited servers.", Toast.LENGTH_SHORT).show();
                     } else {
-                        Log.e(TAG, "Sunucu yanıtı başarısız: " + response.body().getMessage());
-                        Toast.makeText(ServerSelectionActivity.this, "Sunucu hatası: " + response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                        serverList.addAll(allServers);
                     }
+
+                    serverAdapter.notifyDataSetChanged();
                 } else {
-                    // 401 (Yetkisiz) veya 500 (Sunucu Hatası) gibi durumlarda burası çalışır
-                    Log.e(TAG, "Sunucular çekilemedi. Hata kodu: " + response.code());
-                    Toast.makeText(ServerSelectionActivity.this, "Sunucular yüklenemedi (Hata: " + response.code() + ")", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ServerSelectionActivity.this, "Sunucular yüklenemedi", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<List<Server>>> call, Throwable t) {
                 loadingBar.setVisibility(View.GONE);
-                // SSL Hatası veya İnternet Yoksa burası çalışır
-                Log.e(TAG, "Sunucu çekme hatası (onFailure): ", t);
                 Toast.makeText(ServerSelectionActivity.this, "Ağ hatası: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Adapter Sınıfı
     private static class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerViewHolder> {
         private List<Server> serverList;
         private Context context;
+        private boolean isUserPremium;
 
-        public ServerAdapter(List<Server> serverList, Context context) {
+        public ServerAdapter(List<Server> serverList, Context context, boolean isUserPremium) {
             this.serverList = serverList;
             this.context = context;
+            this.isUserPremium = isUserPremium;
+        }
+
+        public void setPremiumStatus(boolean status) {
+            this.isUserPremium = status;
         }
 
         @NonNull
@@ -166,8 +206,6 @@ public class ServerSelectionActivity extends AppCompatActivity {
                 editor.putLong("selected_server_id", server.getId());
                 editor.putString("selected_server_name", server.getCountry() != null ? server.getCountry().getCountryName() : server.getServerName());
                 editor.apply();
-
-                Log.d(TAG, "Sunucu seçildi: ID " + server.getId() + ", Ad " + server.getServerName());
 
                 if (context instanceof AppCompatActivity) {
                     ((AppCompatActivity) context).finish();

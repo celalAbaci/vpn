@@ -5,7 +5,6 @@ import com.google.gson.annotations.SerializedName;
 /**
  * VPN Sunucusu model sınıfı.
  * Backend'deki `com.celalabaci.dto.vpnserver.VpnServerDto` ile eşleşir.
- * Örnek dosya yerine backend ile tam uyumlu hale getirildi.
  */
 public class Server {
 
@@ -19,7 +18,7 @@ public class Server {
     private String serverIpAddress;
 
     @SerializedName("country")
-    private Country country; // Backend'den CountryDto nesnesi gelir
+    private Country country;
 
     @SerializedName("currentLoadPercentage")
     private Float currentLoadPercentage;
@@ -29,6 +28,10 @@ public class Server {
 
     @SerializedName("isActive")
     private boolean isActive;
+
+    // Added field for Filtering
+    @SerializedName("isFree")
+    private boolean isFree;
 
     // Getter
     public Long getId() {
@@ -57,5 +60,9 @@ public class Server {
 
     public boolean isActive() {
         return isActive;
+    }
+
+    public boolean isFree() {
+        return isFree;
     }
 }

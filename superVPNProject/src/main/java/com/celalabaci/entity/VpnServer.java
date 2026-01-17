@@ -42,4 +42,8 @@ public class VpnServer extends BaseEntity {
 
     @Column(name = "is_active")
     private boolean isActive = true;
+
+    // Added to distinguish Free/Premium servers
+    @Column(name = "is_free")
+    private boolean isFree = false;
 }

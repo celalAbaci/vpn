@@ -14,11 +14,15 @@ import java.time.OffsetDateTime;
 public class UserDevice extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = true)
+    @JoinColumn(name = "user_id", nullable = true) // Nullable for Guests
     private User user;
 
     @Column(name = "device_name", nullable = false, length = 100)
     private String deviceName;
+
+    // Added uniqueDeviceId for Guest handling
+    @Column(name = "unique_device_id", unique = true, length = 100)
+    private String uniqueDeviceId;
 
     @Column(name = "last_seen", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime lastSeen;

@@ -12,8 +12,13 @@ import lombok.Setter;
 public class UserVpnConfig extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true) // Changed to nullable
     private User user;
+
+    // Added Device reference for Guest logging
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "device_id", nullable = true)
+    private UserDevice device;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "server_id", nullable = false)
@@ -30,8 +35,6 @@ public class UserVpnConfig extends BaseEntity {
     @Column(name = "identifier_key")
     private String identifierKey;
 
-    // --- EKLENEN KISIM ---
-    // Bu alan eksik olduğu için hata alıyordun.
     @Column(name = "is_active")
     private boolean active = true;
 }

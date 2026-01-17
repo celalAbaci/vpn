@@ -4,10 +4,7 @@ import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnConfigGenerationRequest;
 import com.celalabaci.dto.config.VpnConfigResponse;
 import com.celalabaci.dto.config.VpnProtocol;
-import com.celalabaci.entity.User;
-import com.celalabaci.entity.UserDevice;
-import com.celalabaci.entity.UserVpnConfig;
-import com.celalabaci.entity.VpnServer;
+import com.celalabaci.entity.*;
 import com.celalabaci.exception.ConfigGenerationException;
 import com.celalabaci.exception.MessageType;
 import com.celalabaci.repository.UserDeviceRepository;
@@ -17,10 +14,7 @@ import com.celalabaci.service.IVpnConfigService;
 import com.celalabaci.service.agent.VpnApiAgentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -38,9 +32,18 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
         VpnServer entryServer = vpnServerRepository.findById(request.getEntryServerId())
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Sunucu bulunamadı"));
 
+        // Determine if the user is a guest
+        boolean isGuest = (currentUser == null || currentUser.getRole() == Role.GUEST);
+
         UserDevice device = null;
-        if (currentUser != null && request.getDeviceId() != null) {
-            device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+        if (request.getDeviceId() != null) {
+             device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+        }
+
+        // If device is still null but we have a virtual guest user with a username pattern
+        if (device == null && isGuest && currentUser != null && currentUser.getUsername().startsWith("GUEST_")) {
+             String uniqueId = currentUser.getUsername().replace("GUEST_", "");
+             device = userDeviceRepository.findByUniqueDeviceId(uniqueId).orElse(null);
         }
 
         String configContent = "";
@@ -66,7 +69,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("remote-cert-tls server\n");
             sb.append("auth SHA512\n");
             sb.append("ignore-unknown-option block-outside-dns\n");
+            sb.append("ignore-unknown-option shaper\n");
             sb.append("verb 3\n");
+
+            // --- SPEED LIMIT FOR GUEST/FREE USERS ---
+            if (isGuest || (currentUser != null && currentUser.getRole() == Role.USER)) {
+                sb.append("shaper 2000000\n");
+            }
 
             if (ovpn.getCaCert() != null)
                 sb.append("<ca>\n").append(ovpn.getCaCert()).append("\n</ca>\n");
@@ -88,20 +97,26 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         // Loglama
         try {
-            if (currentUser != null) {
-                UserVpnConfig logRecord = new UserVpnConfig();
+            UserVpnConfig logRecord = new UserVpnConfig();
+
+            // Handle User (might be null or virtual)
+            // If virtual guest user, we don't save the User entity relation if it's transient
+            // But if currentUser comes from DB (standard flow), we save it.
+            if (currentUser != null && currentUser.getId() != null) {
                 logRecord.setUser(currentUser);
-                logRecord.setServer(entryServer);
-                logRecord.setConfigContent(configContent);
-
-                // Entity'de 'protocol' alanı olduğu için bunu tekrar ekliyoruz
-                logRecord.setProtocol(protocol);
-
-                // UserVpnConfig sınıfına 'active' alanını eklediğimiz için bu artık çalışacak
-                logRecord.setActive(true);
-
-                userVpnConfigRepository.save(logRecord);
             }
+
+            if (device != null) {
+                logRecord.setDevice(device);
+            }
+
+            logRecord.setServer(entryServer);
+            logRecord.setConfigContent(configContent);
+            logRecord.setProtocol(protocol);
+            logRecord.setActive(true);
+
+            userVpnConfigRepository.save(logRecord);
+
         } catch (Exception e) {
             log.error("Config loglanırken hata oluştu: " + e.getMessage());
         }

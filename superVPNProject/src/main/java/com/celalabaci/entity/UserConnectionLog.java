@@ -17,10 +17,10 @@ import java.time.OffsetDateTime;
         @Index(name = "idx_log_server", columnList = "server_id"),
         @Index(name = "idx_log_connect_time", columnList = "connect_time")
 })
-public class UserConnectionLog extends LogBaseEntity { // BaseEntity yerine LogBaseEntity kullanıldı
+public class UserConnectionLog extends LogBaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true) // Changed to nullable=true for Guests
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)

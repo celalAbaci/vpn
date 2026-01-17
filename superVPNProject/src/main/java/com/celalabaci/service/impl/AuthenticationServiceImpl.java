@@ -4,10 +4,12 @@ import com.celalabaci.dto.*;
 import com.celalabaci.entity.RefreshToken;
 import com.celalabaci.entity.Role;
 import com.celalabaci.entity.User;
+import com.celalabaci.entity.UserDevice;
 import com.celalabaci.exception.BaseException;
 import com.celalabaci.exception.MessageType;
 import com.celalabaci.jwt.JwtService;
 import com.celalabaci.repository.RefreshTokenRepository;
+import com.celalabaci.repository.UserDeviceRepository;
 import com.celalabaci.repository.UserRepository;
 import com.celalabaci.service.IAuthenticationService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -26,6 +29,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserDeviceRepository userDeviceRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -88,6 +92,42 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         RefreshToken newRefreshToken = createAndSaveRefreshToken(user);
 
         return new AuthResponse(accessToken, newRefreshToken.getToken());
+    }
+
+    @Override
+    public AuthResponse guestLogin(GuestLoginRequest request) {
+        // Guest login için benzersiz cihaz ID'si zorunludur
+        if (request.getUniqueDeviceId() == null || request.getUniqueDeviceId().isEmpty()) {
+            throw new BaseException(MessageType.GENERAL_EXCEPTION, "Device ID is required for guest login");
+        }
+
+        // Cihazı bul veya oluştur
+        Optional<UserDevice> existingDevice = userDeviceRepository.findByUniqueDeviceId(request.getUniqueDeviceId());
+        UserDevice device;
+
+        if (existingDevice.isPresent()) {
+            device = existingDevice.get();
+        } else {
+            device = new UserDevice();
+            device.setUniqueDeviceId(request.getUniqueDeviceId());
+            device.setDeviceName(request.getDeviceName() != null ? request.getDeviceName() : "Unknown Guest Device");
+            device.setLastSeen(OffsetDateTime.now());
+            device.setActive(true);
+            device = userDeviceRepository.save(device);
+        }
+
+        // Misafir için geçici bir User nesnesi oluşturuyoruz (JWT için), ancak DB'ye kaydetmiyoruz.
+        // Bu "sanal" kullanıcı, JWT token içinde gerekli claim'leri taşıyacak.
+        User guestUser = new User();
+        guestUser.setUsername("GUEST_" + device.getUniqueDeviceId());
+        guestUser.setRole(Role.GUEST); // Yeni eklenen rol
+
+        // JWT Oluştur
+        var jwtToken = jwtService.generateToken(guestUser);
+
+        // Guest için refresh token şimdilik vermiyoruz veya benzer bir mantık kullanıyoruz.
+        // Şimdilik null veya geçici bir değer dönebiliriz.
+        return new AuthResponse(jwtToken, "GUEST_REFRESH_NOT_SUPPORTED");
     }
 
     private RefreshToken createAndSaveRefreshToken(User user) {

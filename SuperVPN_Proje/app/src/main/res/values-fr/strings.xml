@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">SuperVPN</string>
+    <string name="connect">Se connecter</string>
+    <string name="disconnect">Déconnecter</string>
+    <string name="status_connected">Connecté</string>
+    <string name="status_connecting">Connexion...</string>
+    <string name="status_disconnected">Déconnecté</string>
+    <string name="guest_login">Connexion Invité</string>
+    <string name="premium">Premium</string>
+    <string name="free">Gratuit</string>
+    <string name="server_select">Sélectionner un serveur</string>
+    <string name="current_server">Actuel : %1$s</string>
+    <string name="tap_to_connect">Appuyez pour connecter</string>
+    <string name="account_title">Compte</string>
+    <string name="status_label_connected">SÉCURISÉ</string>
+    <string name="status_label_connecting">ATTENTE</string>
+    <string name="status_label_disconnected">NON SÉCURISÉ</string>
+    <string name="network_error_device">Erreur info appareil : %1$s</string>
+    <string name="network_error_register">Erreur inscription appareil : %1$s</string>
+    <string name="network_error_sub">Erreur vérification abo : %1$s</string>
+    <string name="network_error_config">Erreur config : %1$s</string>
+    <string name="error_device_info">Erreur info appareil</string>
+    <string name="device_registration_failed">Inscription échouée</string>
+    <string name="error_active_subscription">Aucun abonnement actif</string>
+    <string name="server_select_first">Veuillez d\'abord sélectionner un serveur</string>
+    <string name="config_error">Erreur config : %1$s</string>
+    <string name="vpn_disconnected">VPN déconnecté</string>
+    <string name="browser_open_error">Erreur ouverture navigateur</string>
+    <string name="browser_title">Navigateur Privé</string>
+    <string name="menu_support">Support</string>
+    <string name="menu_always_on">VPN Toujours Actif</string>
+    <string name="menu_about">À propos</string>
+</resources>
