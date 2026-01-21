@@ -10,7 +10,9 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "user_devices")
+@Table(name = "user_devices", indexes = {
+        @Index(name = "idx_device_unique_id", columnList = "unique_device_id", unique = true)
+})
 public class UserDevice extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -19,6 +21,9 @@ public class UserDevice extends BaseEntity {
 
     @Column(name = "device_name", nullable = false, length = 100)
     private String deviceName;
+
+    @Column(name = "unique_device_id", nullable = false, unique = true, length = 64)
+    private String uniqueDeviceId;
 
     @Column(name = "last_seen", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime lastSeen;

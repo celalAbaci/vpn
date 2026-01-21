@@ -20,7 +20,7 @@ import java.time.OffsetDateTime;
 public class UserConnectionLog extends LogBaseEntity { // BaseEntity yerine LogBaseEntity kullanıldı
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true) // Allow null for Guest users
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)

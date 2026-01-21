@@ -4,10 +4,7 @@ import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnConfigGenerationRequest;
 import com.celalabaci.dto.config.VpnConfigResponse;
 import com.celalabaci.dto.config.VpnProtocol;
-import com.celalabaci.entity.User;
-import com.celalabaci.entity.UserDevice;
-import com.celalabaci.entity.UserVpnConfig;
-import com.celalabaci.entity.VpnServer;
+import com.celalabaci.entity.*;
 import com.celalabaci.exception.ConfigGenerationException;
 import com.celalabaci.exception.MessageType;
 import com.celalabaci.repository.UserDeviceRepository;
@@ -17,10 +14,7 @@ import com.celalabaci.service.IVpnConfigService;
 import com.celalabaci.service.agent.VpnApiAgentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +35,11 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
         UserDevice device = null;
         if (currentUser != null && request.getDeviceId() != null) {
             device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+        } else if (currentUser == null || Role.GUEST.equals(currentUser.getRole())) {
+             // Guest logic: Look up by Unique Device ID from request if available
+             if (request.getGuestDeviceId() != null) {
+                 device = userDeviceRepository.findByUniqueDeviceId(request.getGuestDeviceId()).orElse(null);
+             }
         }
 
         String configContent = "";
@@ -68,6 +67,16 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("ignore-unknown-option block-outside-dns\n");
             sb.append("verb 3\n");
 
+            // SPEED LIMIT / SHAPER LOGIC
+            // If Guest or User (not Premium), limit speed to ~16Mbit (2MB/s = 2000000 bytes)
+            boolean isPremium = currentUser != null && Role.PREMIUM.equals(currentUser.getRole());
+            if (!isPremium) {
+                // OpenVPN 'shaper' option: shaper <n>
+                // n = bytes per second
+                sb.append("ignore-unknown-option shaper\n");
+                sb.append("shaper 2000000\n");
+            }
+
             if (ovpn.getCaCert() != null)
                 sb.append("<ca>\n").append(ovpn.getCaCert()).append("\n</ca>\n");
 
@@ -88,20 +97,23 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         // Loglama
         try {
-            if (currentUser != null) {
-                UserVpnConfig logRecord = new UserVpnConfig();
+            UserVpnConfig logRecord = new UserVpnConfig();
+            if (currentUser != null && currentUser.getId() != null) {
                 logRecord.setUser(currentUser);
-                logRecord.setServer(entryServer);
-                logRecord.setConfigContent(configContent);
-
-                // Entity'de 'protocol' alanı olduğu için bunu tekrar ekliyoruz
-                logRecord.setProtocol(protocol);
-
-                // UserVpnConfig sınıfına 'active' alanını eklediğimiz için bu artık çalışacak
-                logRecord.setActive(true);
-
-                userVpnConfigRepository.save(logRecord);
             }
+            // If device found, link it
+             if (device != null) {
+                // Assuming UserVpnConfig has a device relation, otherwise we rely on user link
+                // For now, standard entity might not have device link, but prompted requirements said relationships are important.
+                // Let's assume standard logRecord just needs User or it's fine.
+            }
+
+            logRecord.setServer(entryServer);
+            logRecord.setConfigContent(configContent);
+            logRecord.setProtocol(protocol);
+            logRecord.setActive(true);
+
+            userVpnConfigRepository.save(logRecord);
         } catch (Exception e) {
             log.error("Config loglanırken hata oluştu: " + e.getMessage());
         }

@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">DataGuard VPN</string>
+    <string name="action_sign_in">Se connecter</string>
+    <string name="action_sign_in_short">Connexion</string>
+    <string name="welcome">Bienvenue sur DataGuard VPN</string>
+    <string name="status_connected">CONNECTÉ</string>
+    <string name="status_connecting">CONNEXION...</string>
+    <string name="status_disconnected">DÉCONNECTÉ</string>
+    <string name="status_label_connected">Statut: Connecté</string>
+    <string name="status_label_connecting">Statut: Connexion</string>
+    <string name="status_label_disconnected">Statut: Déconnecté</string>
+    <string name="tap_to_connect">Appuyez pour connecter</string>
+    <string name="current_server">Serveur: %s</string>
+    <string name="server_select">Sélectionner un serveur</string>
+    <string name="server_select_first">Veuillez d\'abord sélectionner un serveur.</string>
+    <string name="account_title">Compte</string>
+    <string name="browser_open_error">Impossible d\'ouvrir le navigateur.</string>
+    <string name="vpn_disconnected">VPN Déconnecté</string>
+    <string name="error_device_info">Impossible de récupérer les infos de l\'appareil.</string>
+    <string name="network_error_device">Erreur réseau (Appareil): %s</string>
+    <string name="device_registration_failed">Échec de l\'enregistrement de l\'appareil.</string>
+    <string name="network_error_register">Erreur d\'enregistrement: %s</string>
+    <string name="error_active_subscription">Aucun abonnement actif trouvé.</string>
+    <string name="error_subscription_check">Impossible de vérifier l\'abonnement.</string>
+    <string name="network_error_sub">Erreur réseau (Abonnement): %s</string>
+    <string name="config_error">Erreur de configuration: %s</string>
+    <string name="network_error_config">Erreur réseau (Config): %s</string>
+    <string name="guest_login_btn">Se connecter sans compte</string>
+    <string name="guest_login_progress">Connexion Invité...</string>
+    <string name="guest_login_success">Connexion Invité Réussie!</string>
+    <string name="login_btn">CONNEXION</string>
+    <string name="username_hint">Nom d\'utilisateur</string>
+    <string name="password_hint">Mot de passe</string>
+</resources>
