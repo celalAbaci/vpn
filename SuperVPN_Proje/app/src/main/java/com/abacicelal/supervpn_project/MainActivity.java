@@ -1,7 +1,5 @@
 package com.abacicelal.supervpn_project;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -46,7 +44,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-// --- GÖMÜLÜ OPENVPN KÜTÜPHANELERİ (YENİ) ---
 import de.blinkt.openvpn.VpnProfile;
 import de.blinkt.openvpn.core.ConfigParser;
 import de.blinkt.openvpn.core.OpenVPNService;
@@ -54,14 +51,12 @@ import de.blinkt.openvpn.core.ProfileManager;
 import de.blinkt.openvpn.core.VpnStatus;
 import de.blinkt.openvpn.core.ConnectionStatus;
 
-// VpnStatus.StateListener ekledik. Artık durumları buradan dinleyeceğiz.
 public class MainActivity extends AppCompatActivity implements VpnStatus.StateListener {
 
     private static final String TAG = "MainActivity";
     public static boolean isConnected = false;
     private boolean isConnecting = false;
 
-    // UI Bileşenleri
     private ImageButton connectButton;
     private ImageButton menuButton;
     private ImageButton premiumButton;
@@ -84,22 +79,17 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     private TextView currentServerInfo;
     private TextView currentProtocolInfo;
 
-    // Zamanlayıcı
     private Handler timerHandler = new Handler(Looper.getMainLooper());
     private Runnable timerRunnable;
     private long startTime;
 
-    // SharedPreferences
     private SharedPreferences sharedPreferences;
     private static final String PREFS_NAME = "VPN_PREFS";
     private static final String KEY_START_TIME = "start_time";
     private static final String KEY_SELECTED_SERVER_NAME = "selected_server_name";
     private static final String KEY_SELECTED_SERVER_ID = "selected_server_id";
 
-    // Retrofit ApiService
     private ApiService apiService;
-
-    // Seçilen protokol
     private VpnProtocol selectedProtocol = VpnProtocol.OPENVPN;
 
     @Override
@@ -114,21 +104,14 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
 
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 
-        // UI Başlangıç Durumu
         updateUIOnConnectionState();
-
-        // Varsayılan Protokol Ayarı
         setProtocolSelection(VpnProtocol.OPENVPN);
-
-        // Kullanıcı abonelik durumunu kontrol et ve UI güncelle
         checkSubscriptionStatusForUI();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Gömülü motorun durum dinleyicisini ekle
         VpnStatus.addStateListener(this);
 
         String savedServerName = sharedPreferences.getString(KEY_SELECTED_SERVER_NAME, getString(R.string.server_select));
@@ -137,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         if (savedServerId != 0) currentServerInfo.setText(String.format(getString(R.string.current_server), savedServerName));
         else currentServerInfo.setText(String.format(getString(R.string.current_server), getString(R.string.server_select)));
 
-        // Eğer uygulama kapalıyken VPN çalışmaya devam ettiyse süreyi düzelt
         if (isConnected) {
             startTime = sharedPreferences.getLong(KEY_START_TIME, 0);
             if (startTime > 0) startTimer();
@@ -150,18 +132,15 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     @Override
     protected void onPause() {
         super.onPause();
-        // Pil tasarrufu için dinleyiciyi kaldır
         VpnStatus.removeStateListener(this);
     }
 
-    // --- GÖMÜLÜ MOTOR DURUM DİNLEYİCİSİ ---
     @Override
     public void updateState(String state, String logmessage, int localizedResId, ConnectionStatus level, Intent intent) {
         runOnUiThread(() -> {
-            Log.d(TAG, "VPN Durumu: " + state + " (" + level + ")");
+            Log.d(TAG, "VPN Status: " + state + " (" + level + ")");
 
             if (level == ConnectionStatus.LEVEL_CONNECTED) {
-                // BAĞLANDI
                 if (!isConnected) {
                     isConnected = true;
                     isConnecting = false;
@@ -171,19 +150,16 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                     updateUIOnConnectionState();
                 }
             } else if (level == ConnectionStatus.LEVEL_NOTCONNECTED || level == ConnectionStatus.LEVEL_AUTH_FAILED || level == ConnectionStatus.LEVEL_NONETWORK) {
-                // BAĞLANTI KOPTU / HATA
                 if (isConnected || isConnecting) {
                     isConnected = false;
                     isConnecting = false;
                     stopTimer();
                     updateUIOnConnectionState();
-
                     if (level == ConnectionStatus.LEVEL_AUTH_FAILED) {
-                        Toast.makeText(this, "Kimlik doğrulama hatası!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Auth Error", Toast.LENGTH_SHORT).show();
                     }
                 }
             } else if (level == ConnectionStatus.LEVEL_CONNECTING_SERVER_REPLIED || level == ConnectionStatus.LEVEL_CONNECTING_NO_SERVER_REPLY_YET || level == ConnectionStatus.LEVEL_WAITING_FOR_USER_INPUT) {
-                // BAĞLANIYOR
                 isConnecting = true;
                 updateUIOnConnectionState();
             }
@@ -191,9 +167,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     }
 
     @Override
-    public void setConnectedVPN(String uuid) {
-        // Gerekli değil
-    }
+    public void setConnectedVPN(String uuid) { }
 
     private void initializeViews() {
         connectButton = findViewById(R.id.connectButton);
@@ -229,16 +203,13 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         connectButton.setOnClickListener(v -> handleConnectButtonClick());
         menuButton.setOnClickListener(v -> toggleSideMenu());
         dimBackground.setOnClickListener(v -> closeSideMenu());
-
         setupProtocolButtons();
         setupMenuNavigation();
-
         serverSelectionLayout.setOnClickListener(v -> startActivity(new Intent(this, ServerSelectionActivity.class)));
         locationButton.setOnClickListener(v -> startActivity(new Intent(this, ServerSelectionActivity.class)));
         premiumButton.setOnClickListener(v -> startActivity(new Intent(this, PremiumActivity.class)));
         upgradePremiumButton.setOnClickListener(v -> startActivity(new Intent(this, PremiumActivity.class)));
         helpButton.setOnClickListener(v -> startActivity(new Intent(this, HelpSupportActivity.class)));
-
         browserButton.setOnClickListener(v -> {
             try {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.dataguardvpn.com"));
@@ -252,30 +223,29 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     private void handleConnectButtonClick() {
         Animation bounceFadeAnim = AnimationUtils.loadAnimation(this, R.anim.bounce_fade_set);
         connectButton.startAnimation(bounceFadeAnim);
-
-        if (!isConnected && !isConnecting) {
-            startVPNConnection();
-        } else if (isConnected || isConnecting) {
-            disconnectVPN();
-        }
+        if (!isConnected && !isConnecting) startVPNConnection();
+        else if (isConnected || isConnecting) disconnectVPN();
     }
 
     private void startVPNConnection() {
-        Log.d(TAG, "VPN Bağlantısı Başlatılıyor...");
+        Log.d(TAG, "Starting VPN...");
         isConnecting = true;
         updateUIOnConnectionState();
         fetchDeviceAndCheckSubscription();
     }
 
     private void fetchDeviceAndCheckSubscription() {
-        if (RetrofitClient.getToken(this) == null) {
-            Long registeredId = DeviceIdManager.getRegisteredDeviceId(this);
-            if (registeredId != null) {
-                checkSubscription(registeredId);
-            } else {
-                registerDevice();
-            }
-            return;
+        String token = RetrofitClient.getToken(this);
+
+        // --- GUEST LOGIC FIX ---
+        // If no token, we are in Guest Mode
+        if (token == null) {
+             // Guest users don't need a "device registration" in the sense of the old system
+             // They just need a config. The Backend now handles GUEST mode by Device ID.
+             // But we still need to provide a Device ID for the Config Request.
+             String guestDeviceId = DeviceIdManager.getDeviceId(this);
+             fetchVpnConfig(null, guestDeviceId); // guestDeviceId pass edildi
+             return;
         }
 
         apiService.getMyDevices().enqueue(new Callback<ApiResponse<List<Device>>>() {
@@ -283,16 +253,10 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             public void onResponse(Call<ApiResponse<List<Device>>> call, Response<ApiResponse<List<Device>>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<Device> devices = response.body().getData();
-                    if (devices == null || devices.isEmpty()) {
-                        registerDevice();
-                    } else {
-                        checkSubscription(devices.get(0).getId());
-                    }
-                } else {
-                    handleConnectionFailure(getString(R.string.error_device_info) + " Kod: " + response.code());
-                }
+                    if (devices == null || devices.isEmpty()) registerDevice();
+                    else checkSubscription(devices.get(0).getId());
+                } else handleConnectionFailure(getString(R.string.error_device_info) + " Code: " + response.code());
             }
-
             @Override
             public void onFailure(Call<ApiResponse<List<Device>>> call, Throwable t) {
                 handleConnectionFailure(String.format(getString(R.string.network_error_device), t.getMessage()));
@@ -305,13 +269,9 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         apiService.registerDevice(new DeviceRequest(deviceName)).enqueue(new Callback<ApiResponse<Device>>() {
             @Override
             public void onResponse(Call<ApiResponse<Device>> call, Response<ApiResponse<Device>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    checkSubscription(response.body().getData().getId());
-                } else {
-                    handleConnectionFailure(getString(R.string.device_registration_failed));
-                }
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) checkSubscription(response.body().getData().getId());
+                else handleConnectionFailure(getString(R.string.device_registration_failed));
             }
-
             @Override
             public void onFailure(Call<ApiResponse<Device>> call, Throwable t) {
                 handleConnectionFailure(String.format(getString(R.string.network_error_register), t.getMessage()));
@@ -321,12 +281,11 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
 
     private void checkSubscriptionStatusForUI() {
         if (RetrofitClient.getToken(this) == null) {
-            if (menuAccount != null) menuAccount.setText("Misafir");
+            if (menuAccount != null) menuAccount.setText("Guest");
             if (premiumButton != null) premiumButton.setVisibility(View.VISIBLE);
             if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.VISIBLE);
             return;
         }
-
         apiService.getMySubscriptions().enqueue(new Callback<ApiResponse<List<Subscription>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Subscription>>> call, Response<ApiResponse<List<Subscription>>> response) {
@@ -335,13 +294,9 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                     boolean hasActive = false;
                     if (subs != null) {
                         for (Subscription s : subs) {
-                            if (s.isActive()) {
-                                hasActive = true;
-                                break;
-                            }
+                            if (s.isActive()) { hasActive = true; break; }
                         }
                     }
-
                     if (hasActive) {
                         if (premiumButton != null) premiumButton.setVisibility(View.GONE);
                         if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.GONE);
@@ -367,26 +322,22 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                     List<Subscription> subs = response.body().getData();
                     if (subs != null) {
                         for (Subscription s : subs) {
-                            if (s.isActive()) {
-                                hasActive = true;
-                                break;
-                            }
+                            if (s.isActive()) { hasActive = true; break; }
                         }
                     }
                     if (hasActive) {
                         if (premiumButton != null) premiumButton.setVisibility(View.GONE);
                         if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.GONE);
-                        fetchVpnConfig(deviceId);
+                        fetchVpnConfig(deviceId, null);
                     } else {
-                        Toast.makeText(MainActivity.this, getString(R.string.error_active_subscription), Toast.LENGTH_LONG).show();
-                        startActivity(new Intent(MainActivity.this, PremiumActivity.class));
-                        handleConnectionFailure(null);
+                        // Allow Free Servers?
+                        // The logic for free servers should be in ServerSelection, not blocking here.
+                        // Assuming current logic blocks all. We should change this to allow connection if Server is Free.
+                        // For now, let's assume we proceed to fetch config, and backend rejects if not allowed.
+                        fetchVpnConfig(deviceId, null);
                     }
-                } else {
-                    handleConnectionFailure(getString(R.string.error_subscription_check));
-                }
+                } else handleConnectionFailure(getString(R.string.error_subscription_check));
             }
-
             @Override
             public void onFailure(Call<ApiResponse<List<Subscription>>> call, Throwable t) {
                 handleConnectionFailure(String.format(getString(R.string.network_error_sub), t.getMessage()));
@@ -394,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         });
     }
 
-    private void fetchVpnConfig(Long deviceId) {
+    private void fetchVpnConfig(Long deviceId, String guestDeviceId) {
         long serverId = sharedPreferences.getLong(KEY_SELECTED_SERVER_ID, 0);
         if (serverId == 0) {
             Toast.makeText(this, getString(R.string.server_select_first), Toast.LENGTH_LONG).show();
@@ -403,7 +354,12 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             return;
         }
 
-        ConfigGenerationRequest request = new ConfigGenerationRequest(serverId, deviceId, selectedProtocol);
+        ConfigGenerationRequest request = new ConfigGenerationRequest();
+        request.setEntryServerId(serverId);
+        request.setProtocol(selectedProtocol);
+
+        if (deviceId != null) request.setDeviceId(deviceId);
+        if (guestDeviceId != null) request.setGuestDeviceId(guestDeviceId);
 
         apiService.generateConfig(request).enqueue(new Callback<ApiResponse<VpnConfigResponse>>() {
             @Override
@@ -413,20 +369,10 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                     String configContent = configResponse.getConfigurationFileContent();
                     String protocol = configResponse.getProtocol();
 
-                    Log.i(TAG, "Config alındı. Protokol: " + protocol);
-
-                    if ("OPENVPN".equalsIgnoreCase(protocol)) {
-                        startOpenVpn(configContent);
-                    } else {
-                        // V2RAY, IKEv2 şimdilik desteklenmiyor veya aynı şekilde işlem görüyor
-                        // Test için OpenVPN'e zorluyoruz
-                        startOpenVpn(configContent);
-                    }
-                } else {
-                    handleConnectionFailure(String.format(getString(R.string.config_error), response.code()));
-                }
+                    if ("OPENVPN".equalsIgnoreCase(protocol)) startOpenVpn(configContent);
+                    else startOpenVpn(configContent); // Fallback to OpenVPN for now
+                } else handleConnectionFailure(String.format(getString(R.string.config_error), response.code()));
             }
-
             @Override
             public void onFailure(Call<ApiResponse<VpnConfigResponse>> call, Throwable t) {
                 handleConnectionFailure(String.format(getString(R.string.network_error_config), t.getMessage()));
@@ -434,42 +380,37 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         });
     }
 
-    // --- YENİ BAŞLATMA METODU (GÖMÜLÜ MOTOR) ---
     private void startOpenVpn(String configContent) {
         ConfigParser cp = new ConfigParser();
         try {
             cp.parseConfig(new StringReader(configContent));
             VpnProfile vp = cp.convertProfile();
-
-            // Config dosyasını profilin içine gömüyoruz
             vp.mInlineConfig = configContent;
             vp.mName = "SuperVPN Connect";
 
-            // Geçici profil olarak ayarla
-            ProfileManager.setTemporaryProfile(this, vp);
-
-            // Gömülü servisi başlat
-            Intent intent = new Intent(this, OpenVPNService.class);
-            intent.setAction(OpenVPNService.START_SERVICE);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent);
-            } else {
-                startService(intent);
+            // Handshake Fix: Add ignore-unknown-option to ensure compatibility
+            if (!vp.mInlineConfig.contains("ignore-unknown-option block-outside-dns")) {
+                 vp.mInlineConfig += "\nignore-unknown-option block-outside-dns\n";
+            }
+             if (!vp.mInlineConfig.contains("ignore-unknown-option shaper")) {
+                 vp.mInlineConfig += "\nignore-unknown-option shaper\n";
             }
 
+            ProfileManager.setTemporaryProfile(this, vp);
+            Intent intent = new Intent(this, OpenVPNService.class);
+            intent.setAction(OpenVPNService.START_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent);
+            else startService(intent);
         } catch (IOException | ConfigParser.ConfigParseError e) {
             Log.e(TAG, "Config Parse Error", e);
-            handleConnectionFailure("Config hatası: " + e.getLocalizedMessage());
+            handleConnectionFailure("Config Error: " + e.getLocalizedMessage());
         }
     }
 
     private void disconnectVPN() {
-        // Gömülü servisi durdur
         Intent intent = new Intent(this, OpenVPNService.class);
         intent.setAction(OpenVPNService.DISCONNECT_VPN);
         startService(intent);
-
         isConnecting = false;
         isConnected = false;
         stopTimer();
@@ -486,15 +427,12 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         if (message != null) Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    // UI & Animasyon Yardımcıları
     private void toggleSideMenu() {
         if (sideMenu.getVisibility() == View.GONE) {
             sideMenu.setVisibility(View.VISIBLE);
             dimBackground.setVisibility(View.VISIBLE);
             sideMenu.animate().translationX(0).setDuration(250).start();
-        } else {
-            closeSideMenu();
-        }
+        } else closeSideMenu();
     }
 
     private void closeSideMenu() {
@@ -532,9 +470,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
     private void setProtocolSelection(VpnProtocol protocol) {
         this.selectedProtocol = protocol;
         String name = protocol.name();
-        if (protocol == VpnProtocol.OPENVPN && protocolAuto.getBackgroundTintList().getDefaultColor() == ContextCompat.getColor(this, R.color.purple_500)) {
-            name = "Otomatik";
-        }
+        if (protocol == VpnProtocol.OPENVPN && protocolAuto.getBackgroundTintList().getDefaultColor() == ContextCompat.getColor(this, R.color.purple_500)) name = "Otomatik";
         currentProtocolInfo.setText("Protokol : " + name);
     }
 

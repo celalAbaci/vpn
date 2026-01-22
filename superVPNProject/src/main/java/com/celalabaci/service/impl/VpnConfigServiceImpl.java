@@ -4,6 +4,7 @@ import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnConfigGenerationRequest;
 import com.celalabaci.dto.config.VpnConfigResponse;
 import com.celalabaci.dto.config.VpnProtocol;
+import com.celalabaci.entity.Role;
 import com.celalabaci.entity.User;
 import com.celalabaci.entity.UserDevice;
 import com.celalabaci.entity.UserVpnConfig;
@@ -17,10 +18,9 @@ import com.celalabaci.service.IVpnConfigService;
 import com.celalabaci.service.agent.VpnApiAgentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -39,8 +39,52 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Sunucu bulunamadı"));
 
         UserDevice device = null;
-        if (currentUser != null && request.getDeviceId() != null) {
-            device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+        boolean isGuest = false;
+
+        // 1. Resolve User and Device
+        if (currentUser != null) {
+             // Authenticated User (Regular or Guest with Token)
+             if (request.getDeviceId() != null) {
+                 device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+             }
+             if (currentUser.getRole() == Role.GUEST || currentUser.getUsername().startsWith("GUEST_")) {
+                 isGuest = true;
+             }
+        } else if (request.getGuestDeviceId() != null) {
+             // Unauthenticated Guest Request (Tokenless flow fallback)
+             isGuest = true;
+             String uniqueId = request.getGuestDeviceId();
+             device = userDeviceRepository.findByUniqueDeviceId(uniqueId).orElse(null);
+
+             // CRITICAL: Ensure device exists for logging requirements
+             if (device == null) {
+                 device = new UserDevice();
+                 device.setUniqueDeviceId(uniqueId);
+                 device.setDeviceName("Guest Device - " + uniqueId.substring(0, Math.min(uniqueId.length(), 8)));
+                 device.setActive(true);
+                 device.setLastSeen(OffsetDateTime.now());
+                 device = userDeviceRepository.save(device);
+             } else {
+                 device.setLastSeen(OffsetDateTime.now());
+                 userDeviceRepository.save(device);
+             }
+        }
+
+        // If authenticated user is a guest but device wasn't linked or found by ID, try to find by unique ID if passed
+        if (isGuest && device == null && request.getGuestDeviceId() != null) {
+             device = userDeviceRepository.findByUniqueDeviceId(request.getGuestDeviceId()).orElse(null);
+             // Create if missing (Hybrid flow safety)
+             if (device == null) {
+                 device = new UserDevice();
+                 device.setUniqueDeviceId(request.getGuestDeviceId());
+                 device.setDeviceName("Guest Device - " + request.getGuestDeviceId().substring(0, Math.min(request.getGuestDeviceId().length(), 8)));
+                 device.setActive(true);
+                 device.setLastSeen(OffsetDateTime.now());
+                 // Link to user if currentUser is a real entity?
+                 // If currentUser is transient (from GuestAuthController), we might not be able to save relation if User isn't in DB.
+                 // Assuming Guest Auth Token User is transient. So we don't set user.
+                 device = userDeviceRepository.save(device);
+             }
         }
 
         String configContent = "";
@@ -66,7 +110,14 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("remote-cert-tls server\n");
             sb.append("auth SHA512\n");
             sb.append("ignore-unknown-option block-outside-dns\n");
+            sb.append("ignore-unknown-option shaper\n");
             sb.append("verb 3\n");
+
+            // --- SPEED LIMIT LOGIC ---
+            if (isGuest || (currentUser != null && currentUser.getRole() == Role.USER)) {
+                // shaper 2000000 (Bytes per second) approx 16 Mbps
+                sb.append("shaper 2000000\n");
+            }
 
             if (ovpn.getCaCert() != null)
                 sb.append("<ca>\n").append(ovpn.getCaCert()).append("\n</ca>\n");
@@ -88,20 +139,15 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         // Loglama
         try {
-            if (currentUser != null) {
-                UserVpnConfig logRecord = new UserVpnConfig();
-                logRecord.setUser(currentUser);
-                logRecord.setServer(entryServer);
-                logRecord.setConfigContent(configContent);
+            UserVpnConfig logRecord = new UserVpnConfig();
+            logRecord.setUser(currentUser); // Nullable
+            logRecord.setServer(entryServer);
+            logRecord.setConfigContent(configContent);
+            logRecord.setProtocol(protocol);
+            logRecord.setActive(true);
+            logRecord.setDevice(device); // Now reliably set
 
-                // Entity'de 'protocol' alanı olduğu için bunu tekrar ekliyoruz
-                logRecord.setProtocol(protocol);
-
-                // UserVpnConfig sınıfına 'active' alanını eklediğimiz için bu artık çalışacak
-                logRecord.setActive(true);
-
-                userVpnConfigRepository.save(logRecord);
-            }
+            userVpnConfigRepository.save(logRecord);
         } catch (Exception e) {
             log.error("Config loglanırken hata oluştu: " + e.getMessage());
         }

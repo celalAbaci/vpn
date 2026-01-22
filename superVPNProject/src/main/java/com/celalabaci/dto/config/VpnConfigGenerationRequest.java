@@ -8,16 +8,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VpnConfigGenerationRequest {
-    // Android bu ismi gönderiyor, Long olmalı
     private Long entryServerId;
-
-    // Android bu ismi gönderiyor, Long olmalı
-    private Long deviceId;
-
-    // Android "OPENVPN" gönderiyor, Enum ile eşleşmeli
+    private Long deviceId; // Database ID for registered users
+    private String guestDeviceId; // Unique String ID for guests
     private VpnProtocol protocol;
-
-    // Opsiyonel alanlar (Android göndermese de sorun olmaz)
     private CustomDnsProvider dnsProvider;
     private Long exitServerId;
 }

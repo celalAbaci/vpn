@@ -15,17 +15,21 @@ import java.time.OffsetDateTime;
         @Index(name = "idx_log_user", columnList = "user_id"),
         @Index(name = "idx_log_device", columnList = "device_id"),
         @Index(name = "idx_log_server", columnList = "server_id"),
-        @Index(name = "idx_log_connect_time", columnList = "connect_time")
+        @Index(name = "idx_log_connect_time", columnList = "connect_time"),
+        @Index(name = "idx_log_unique_device", columnList = "unique_device_ref_id")
 })
-public class UserConnectionLog extends LogBaseEntity { // BaseEntity yerine LogBaseEntity kullanıldı
+public class UserConnectionLog extends LogBaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "device_id", nullable = false)
-    private UserDevice device;
+    @JoinColumn(name = "device_id", nullable = true)
+    private UserDevice device; // Link to Registered Device ID table
+
+    @Column(name = "unique_device_ref_id")
+    private String uniqueDeviceId; // String storage for redundant/fast lookup
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "server_id", nullable = false)
