@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">SuperVPN</string>
+    <string name="connect">Connecter</string>
+    <string name="disconnect">Déconnecter</string>
+    <string name="status_connected">Connecté</string>
+    <string name="status_connecting">Connexion...</string>
+    <string name="status_disconnected">Déconnecté</string>
+    <string name="account_title">Compte</string>
+    <string name="guest_login">Connexion Invité</string>
+    <string name="login_success">Connexion réussie</string>
+    <string name="login_failed">Échec de la connexion</string>
+    <string name="server_select">Sélectionner un serveur</string>
+    <string name="current_server">Serveur: %s</string>
+    <string name="tap_to_connect">Appuyez pour connecter</string>
+    <string name="status_label_connected">SÉCURISÉ</string>
+    <string name="status_label_disconnected">NON SÉCURISÉ</string>
+    <string name="status_label_connecting">ATTENDEZ</string>
+    <string name="error_device_info">Info appareil non disponible</string>
+    <string name="network_error_device">Erreur réseau (Appareil): %s</string>
+    <string name="device_registration_failed">Échec enregistrement appareil</string>
+    <string name="network_error_register">Erreur réseau (Enreg.): %s</string>
+    <string name="error_active_subscription">Aucun abonnement actif.</string>
+    <string name="error_subscription_check">Erreur vérification abonnement</string>
+    <string name="network_error_sub">Erreur réseau (Abo): %s</string>
+    <string name="server_select_first">Veuillez sélectionner un serveur.</string>
+    <string name="config_error">Erreur config. Code: %s</string>
+    <string name="network_error_config">Erreur réseau (Config): %s</string>
+    <string name="browser_open_error">Impossible d\'ouvrir le navigateur.</string>
+    <string name="vpn_disconnected">VPN déconnecté.</string>
+</resources>

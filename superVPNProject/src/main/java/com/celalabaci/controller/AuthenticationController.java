@@ -31,4 +31,9 @@ public class AuthenticationController {
     public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         return ResponseEntity.ok(authenticationService.refreshToken(request));
     }
+
+    @PostMapping("/guest-login")
+    public ResponseEntity<AuthResponse> guestLogin(@Valid @RequestBody GuestLoginRequest request) {
+        return ResponseEntity.ok(authenticationService.guestLogin(request));
+    }
 }

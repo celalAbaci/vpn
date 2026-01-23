@@ -14,6 +14,14 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // OpenVPN dimension strategies
+        missingDimensionStrategy 'implementation', 'ui'
+        missingDimensionStrategy 'ovpnimpl', 'ovpn23'
+
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
     }
 
     buildFeatures {
@@ -52,4 +60,9 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
+    // VPN Libraries
+    implementation 'com.github.schwabe:ics-openvpn:master-SNAPSHOT'
+    implementation 'com.wireguard.android:tunnel:1.0.20230706'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
 }

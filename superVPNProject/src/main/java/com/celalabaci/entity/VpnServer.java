@@ -13,6 +13,9 @@ public class VpnServer extends BaseEntity {
     @Column(name = "server_name", nullable = false, length = 100)
     private String serverName;
 
+    @Column(name = "is_free")
+    private boolean isFree = false;
+
     @Column(name = "server_ip_address", nullable = false, unique = true, length = 45)
     private String serverIpAddress;
 

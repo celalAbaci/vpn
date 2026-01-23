@@ -39,8 +39,16 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Sunucu bulunamadı"));
 
         UserDevice device = null;
-        if (currentUser != null && request.getDeviceId() != null) {
-            device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+        boolean isGuest = false;
+
+        if (currentUser != null) {
+            if (currentUser.getUsername() != null && currentUser.getUsername().startsWith("GUEST_")) {
+                isGuest = true;
+                String uniqueId = currentUser.getUsername().substring(6); // Remove "GUEST_"
+                device = userDeviceRepository.findByUniqueDeviceId(uniqueId).orElse(null);
+            } else if (request.getDeviceId() != null) {
+                device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+            }
         }
 
         String configContent = "";
@@ -68,6 +76,12 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("ignore-unknown-option block-outside-dns\n");
             sb.append("verb 3\n");
 
+            // Hız limiti (Misafir veya Premium olmayan kullanıcılar için)
+            if (isGuest || (currentUser != null && currentUser.getRole() == com.celalabaci.entity.Role.USER)) {
+                sb.append("ignore-unknown-option shaper\n");
+                sb.append("shaper 2000000\n"); // ~16Mbps (2MB/s)
+            }
+
             if (ovpn.getCaCert() != null)
                 sb.append("<ca>\n").append(ovpn.getCaCert()).append("\n</ca>\n");
 
@@ -90,7 +104,12 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
         try {
             if (currentUser != null) {
                 UserVpnConfig logRecord = new UserVpnConfig();
-                logRecord.setUser(currentUser);
+
+                if (currentUser.getId() != null) {
+                    logRecord.setUser(currentUser);
+                }
+                logRecord.setDevice(device);
+
                 logRecord.setServer(entryServer);
                 logRecord.setConfigContent(configContent);
 

@@ -378,9 +378,12 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
                         if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.GONE);
                         fetchVpnConfig(deviceId);
                     } else {
-                        Toast.makeText(MainActivity.this, getString(R.string.error_active_subscription), Toast.LENGTH_LONG).show();
-                        startActivity(new Intent(MainActivity.this, PremiumActivity.class));
-                        handleConnectionFailure(null);
+                        // Free/Guest User - Allow connection but keep premium buttons
+                        if (premiumButton != null) premiumButton.setVisibility(View.VISIBLE);
+                        if (upgradePremiumButton != null) upgradePremiumButton.setVisibility(View.VISIBLE);
+
+                        // Misafir ve Free kullanıcılar bağlanabilir
+                        fetchVpnConfig(deviceId);
                     }
                 } else {
                     handleConnectionFailure(getString(R.string.error_subscription_check));

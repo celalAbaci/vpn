@@ -34,6 +34,9 @@ public interface ApiService {
     @POST("api/v1/auth/refresh-token")
     Call<AuthResponse> refreshToken(@Body RefreshTokenRequest refreshTokenRequest);
 
+    @POST("api/v1/auth/guest-login")
+    Call<AuthResponse> guestLogin(@Body GuestLoginRequest guestLoginRequest);
+
     // --- 2. Kimlik Doğrulaması GEREKEN İstekler (USER Rolü) ---
     // NOT: Diğer Controller'lar ApiResponse wrapper kullanıyor.
 

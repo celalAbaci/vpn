@@ -2,6 +2,7 @@ package com.abacicelal.supervpn_project.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.provider.Settings;
 import java.util.UUID;
 
 public class DeviceIdManager {
@@ -11,8 +12,18 @@ public class DeviceIdManager {
     public static String getDeviceId(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         String deviceId = prefs.getString(KEY_DEVICE_ID, null);
+
         if (deviceId == null) {
-            deviceId = UUID.randomUUID().toString();
+            try {
+                deviceId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+            } catch (Exception e) {
+                // Ignore
+            }
+
+            if (deviceId == null || deviceId.isEmpty() || "9774d56d682e549c".equals(deviceId)) {
+                deviceId = UUID.randomUUID().toString();
+            }
+
             prefs.edit().putString(KEY_DEVICE_ID, deviceId).apply();
         }
         return deviceId;

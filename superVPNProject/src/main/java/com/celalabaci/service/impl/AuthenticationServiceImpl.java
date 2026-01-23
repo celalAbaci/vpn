@@ -29,6 +29,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final com.celalabaci.repository.UserDeviceRepository userDeviceRepository;
 
     @Override
     public UserDto register(RegisterRequest request) {
@@ -98,5 +99,29 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         // Refresh token ömrünü 7 gün olarak ayarlayalım
         refreshToken.setExpiresAt(OffsetDateTime.now().plusDays(7));
         return refreshTokenRepository.save(refreshToken);
+    }
+
+    @Override
+    public AuthResponse guestLogin(GuestLoginRequest request) {
+        // Cihazı bul veya oluştur
+        com.celalabaci.entity.UserDevice device = userDeviceRepository.findByUniqueDeviceId(request.getUniqueDeviceId())
+                .orElseGet(() -> {
+                    com.celalabaci.entity.UserDevice newDevice = new com.celalabaci.entity.UserDevice();
+                    newDevice.setUniqueDeviceId(request.getUniqueDeviceId());
+                    newDevice.setDeviceName(request.getDeviceName() != null ? request.getDeviceName() : "Unknown Android Device");
+                    newDevice.setLastSeen(OffsetDateTime.now());
+                    newDevice.setActive(true);
+                    return userDeviceRepository.save(newDevice);
+                });
+
+        // Geçici User objesi oluştur (JWT için)
+        User guestUser = new User();
+        guestUser.setUsername("GUEST_" + device.getUniqueDeviceId());
+        guestUser.setRole(Role.GUEST);
+
+        String jwtToken = jwtService.generateToken(guestUser);
+
+        // Refresh token yok
+        return new AuthResponse(jwtToken, null);
     }
 }
