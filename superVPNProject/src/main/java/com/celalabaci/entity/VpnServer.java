@@ -41,5 +41,8 @@ public class VpnServer extends BaseEntity {
     private Integer currentConnectedUsers = 0;
 
     @Column(name = "is_active")
-    private boolean isActive = true;
+    private boolean active = true; // Changed from isActive to active to match Repository methods usually
+
+    @Column(name = "is_free")
+    private boolean isFree = false;
 }

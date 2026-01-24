@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">SuperVPN Project</string>
+    <string name="status_connecting">Connexion...</string>
+    <string name="status_connected">Connecté</string>
+    <string name="status_disconnected">Pas de connexion</string>
+    <string name="status_label_connecting">CONNEXION</string>
+    <string name="status_label_connected">DÉCONNECTER</string>
+    <string name="status_label_disconnected">CONNECTER</string>
+    <string name="tap_to_connect">Appuyez pour connecter</string>
+    <string name="server_select">Sélectionner un serveur</string>
+    <string name="current_server">Serveur actuel: %s</string>
+</resources>

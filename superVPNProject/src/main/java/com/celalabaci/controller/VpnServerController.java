@@ -22,7 +22,7 @@ public class VpnServerController {
 
     // Kullanıcıların ve adminlerin erişebileceği, sadece aktif sunucuları listeleyen endpoint
     @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM', 'GUEST', 'MODERATOR')")
     public ResponseEntity<ApiResponse<List<VpnServerDto>>> getActiveServers() {
         List<VpnServerDto> servers = vpnServerService.getActiveServersForUsers();
         return ResponseEntity.ok(ApiResponse.success(servers));

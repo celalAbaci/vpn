@@ -12,7 +12,7 @@ import lombok.Setter;
 public class UserVpnConfig extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,8 +30,6 @@ public class UserVpnConfig extends BaseEntity {
     @Column(name = "identifier_key")
     private String identifierKey;
 
-    // --- EKLENEN KISIM ---
-    // Bu alan eksik olduğu için hata alıyordun.
     @Column(name = "is_active")
     private boolean active = true;
 }

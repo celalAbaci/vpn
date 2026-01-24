@@ -10,13 +10,12 @@ import java.util.Optional;
 @Repository
 public interface VpnServerRepository extends JpaRepository<VpnServer, Long> {
 
-    // YÖNTEM BU: "Active" olanları getir. "Is" kelimesini kaldırdık.
     List<VpnServer> findByActiveTrue();
 
-    // IP adresi kontrolü
+    List<VpnServer> findByActiveTrueAndIsFreeTrue();
+
     boolean existsByServerIpAddressIgnoreCase(String serverIpAddress);
 
-    // --- DASHBOARD METOTLARI (Eğer varsa hata vermesin diye ekliyorum) ---
     @Query("SELECT AVG(v.currentLoadPercentage) FROM VpnServer v WHERE v.active = true")
     Double findAverageActiveServerLoad();
 
