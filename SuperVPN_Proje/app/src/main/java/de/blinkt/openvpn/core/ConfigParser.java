@@ -94,6 +94,18 @@ public class ConfigParser {
                 mResult.mConnections[0].mUseUdp = parts[1].toLowerCase().contains("udp");
             }
         }
+        else if (option.equals("auth")) {
+            if (parts.length > 1) mResult.mAuth = parts[1];
+        }
+        else if (option.equals("cipher")) {
+            if (parts.length > 1) mResult.mCipher = parts[1];
+        }
+        else if (option.equals("remote-cert-tls")) {
+            // Usually just validation, can be stored if profile supports it
+        }
+        else if (option.equals("shaper")) {
+            // Explicitly ignore to prevent errors
+        }
         else if (option.equals("client")) {
             // Client modu, işlem yapmaya gerek yok
         }

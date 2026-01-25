@@ -31,6 +31,9 @@ public interface ApiService {
     @POST("api/v1/auth/authenticate")
     Call<AuthResponse> loginUser(@Body AuthRequest authRequest);
 
+    @POST("api/v1/auth/guest-login")
+    Call<AuthResponse> guestLogin(@Body GuestLoginRequest request);
+
     @POST("api/v1/auth/refresh-token")
     Call<AuthResponse> refreshToken(@Body RefreshTokenRequest refreshTokenRequest);
 

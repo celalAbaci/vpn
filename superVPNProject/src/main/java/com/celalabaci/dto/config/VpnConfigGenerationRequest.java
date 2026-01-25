@@ -14,6 +14,8 @@ public class VpnConfigGenerationRequest {
     // Android bu ismi gönderiyor, Long olmalı
     private Long deviceId;
 
+    private String uniqueDeviceId;
+
     // Android "OPENVPN" gönderiyor, Enum ile eşleşmeli
     private VpnProtocol protocol;
 

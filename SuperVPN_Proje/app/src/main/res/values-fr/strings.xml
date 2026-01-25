@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SuperVPN</string>
+    <string name="action_sign_in">Se connecter</string>
+    <string name="action_guest_login">Connexion Invité</string>
+    <string name="status_connected">Connecté</string>
+    <string name="status_disconnected">Déconnecté</string>
+    <string name="status_connecting">Connexion...</string>
+</resources>

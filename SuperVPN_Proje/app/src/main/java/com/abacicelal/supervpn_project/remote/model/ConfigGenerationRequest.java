@@ -20,6 +20,9 @@ public class ConfigGenerationRequest {
     @SerializedName("deviceId")
     private Long deviceId;
 
+    @SerializedName("uniqueDeviceId")
+    private String uniqueDeviceId;
+
     @SerializedName("dnsProvider")
     private String dnsProvider; // CustomDnsProvider enum'ının String hali ("DEFAULT", "ADGUARD" vb.) (opsiyonel)
 
@@ -46,6 +49,10 @@ public class ConfigGenerationRequest {
 
     public void setDeviceId(Long deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public void setUniqueDeviceId(String uniqueDeviceId) {
+        this.uniqueDeviceId = uniqueDeviceId;
     }
 
     public void setDnsProvider(CustomDnsProvider dnsProvider) {

@@ -4,6 +4,7 @@ import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnConfigGenerationRequest;
 import com.celalabaci.dto.config.VpnConfigResponse;
 import com.celalabaci.dto.config.VpnProtocol;
+import com.celalabaci.entity.Role;
 import com.celalabaci.entity.User;
 import com.celalabaci.entity.UserDevice;
 import com.celalabaci.entity.UserVpnConfig;
@@ -39,8 +40,12 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Sunucu bulunamadı"));
 
         UserDevice device = null;
-        if (currentUser != null && request.getDeviceId() != null) {
-            device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+        if (currentUser != null) {
+            if (request.getDeviceId() != null) {
+                device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+            } else if (request.getUniqueDeviceId() != null) {
+                device = userDeviceRepository.findByUniqueDeviceId(request.getUniqueDeviceId()).orElse(null);
+            }
         }
 
         String configContent = "";
@@ -66,6 +71,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("remote-cert-tls server\n");
             sb.append("auth SHA512\n");
             sb.append("ignore-unknown-option block-outside-dns\n");
+
+            // Speed Limit for Guest/Free Users (16Mbit approx 2MB/s)
+            if (currentUser != null && (currentUser.getRole() == Role.GUEST || currentUser.getRole() == Role.USER)) {
+                sb.append("shaper 2000000\n");
+                sb.append("ignore-unknown-option shaper\n");
+            }
+
             sb.append("verb 3\n");
 
             if (ovpn.getCaCert() != null)
