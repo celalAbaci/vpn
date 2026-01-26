@@ -44,4 +44,5 @@
     <string name="super_error">Super Protocol Hatası: %s</string>
     <string name="vpn_disconnected">Bağlantı kesildi.</string>
     <string name="server_select_first">Lütfen önce bir sunucu seçin.</string>
+    <string name="guest_login_btn">Misafir Girişi</string>
 </resources>

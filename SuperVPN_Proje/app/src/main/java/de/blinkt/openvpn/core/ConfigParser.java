@@ -97,6 +97,15 @@ public class ConfigParser {
         else if (option.equals("client")) {
             // Client modu, işlem yapmaya gerek yok
         }
+        else if (option.equals("auth") && parts.length >= 2) {
+            mResult.mAuth = parts[1];
+        }
+        else if (option.equals("cipher") && parts.length >= 2) {
+            mResult.mCipher = parts[1];
+        }
+        else if (option.equals("remote-cert-tls") && parts.length >= 2) {
+            mResult.mRemoteCertTls = parts[1];
+        }
     }
 
     public VpnProfile convertProfile() {

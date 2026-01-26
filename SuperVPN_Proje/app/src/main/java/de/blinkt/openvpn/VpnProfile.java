@@ -33,6 +33,10 @@ public class VpnProfile implements Serializable, Cloneable {
     public String mClientKeyFilename;
     public String mTLSAuthFilename;
 
+    public String mAuth = "SHA512";
+    public String mCipher = "AES-256-GCM";
+    public String mRemoteCertTls = "server";
+
     // Config içeriğinin tamamı burada saklanacak
     public String mInlineConfig;
 

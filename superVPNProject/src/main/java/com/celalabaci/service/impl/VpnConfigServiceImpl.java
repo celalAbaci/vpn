@@ -66,6 +66,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("remote-cert-tls server\n");
             sb.append("auth SHA512\n");
             sb.append("ignore-unknown-option block-outside-dns\n");
+
+            // Hız Limiti (Guest ve Free User için 16Mbit ~ 2MB/s)
+            if (currentUser != null && (currentUser.getRole() == com.celalabaci.entity.Role.GUEST || currentUser.getRole() == com.celalabaci.entity.Role.USER)) {
+                sb.append("shaper 2000000\n");
+            }
+            sb.append("ignore-unknown-option shaper\n");
+
             sb.append("verb 3\n");
 
             if (ovpn.getCaCert() != null)
@@ -88,20 +95,24 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         // Loglama
         try {
-            if (currentUser != null) {
-                UserVpnConfig logRecord = new UserVpnConfig();
+            UserVpnConfig logRecord = new UserVpnConfig();
+
+            // Eğer user transient (Guest) ise veya null ise user alanını null geçiyoruz.
+            if (currentUser != null && currentUser.getId() != null) {
                 logRecord.setUser(currentUser);
-                logRecord.setServer(entryServer);
-                logRecord.setConfigContent(configContent);
-
-                // Entity'de 'protocol' alanı olduğu için bunu tekrar ekliyoruz
-                logRecord.setProtocol(protocol);
-
-                // UserVpnConfig sınıfına 'active' alanını eklediğimiz için bu artık çalışacak
-                logRecord.setActive(true);
-
-                userVpnConfigRepository.save(logRecord);
             }
+
+            if (device != null) {
+                logRecord.setDevice(device);
+            }
+
+            logRecord.setServer(entryServer);
+            logRecord.setConfigContent(configContent);
+            logRecord.setProtocol(protocol);
+            logRecord.setActive(true);
+
+            userVpnConfigRepository.save(logRecord);
+
         } catch (Exception e) {
             log.error("Config loglanırken hata oluştu: " + e.getMessage());
         }

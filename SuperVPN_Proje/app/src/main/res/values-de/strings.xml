@@ -44,4 +44,5 @@
     <string name="super_error">Super Protokoll Fehler: %s</string>
     <string name="vpn_disconnected">Verbindung getrennt.</string>
     <string name="server_select_first">Bitte wählen Sie zuerst einen Server aus.</string>
+    <string name="guest_login_btn">Gast Login</string>
 </resources>
