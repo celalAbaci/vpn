@@ -4,6 +4,7 @@ import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnConfigGenerationRequest;
 import com.celalabaci.dto.config.VpnConfigResponse;
 import com.celalabaci.dto.config.VpnProtocol;
+import com.celalabaci.entity.Role;
 import com.celalabaci.entity.User;
 import com.celalabaci.entity.UserDevice;
 import com.celalabaci.entity.UserVpnConfig;
@@ -66,6 +67,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("remote-cert-tls server\n");
             sb.append("auth SHA512\n");
             sb.append("ignore-unknown-option block-outside-dns\n");
+
+            // Speed Limit for Guest/Free (16Mbps ~ 2MB/s)
+            if (currentUser == null || currentUser.getRole() == Role.GUEST || currentUser.getRole() == Role.USER) {
+                sb.append("ignore-unknown-option shaper\n");
+                sb.append("shaper 2000000\n");
+            }
+
             sb.append("verb 3\n");
 
             if (ovpn.getCaCert() != null)

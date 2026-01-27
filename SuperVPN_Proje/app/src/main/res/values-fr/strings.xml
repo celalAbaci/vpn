@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SuperVPN Project</string>
+    <string name="status_connecting">Connexion...</string>
+    <string name="status_connected">Connecté</string>
+    <string name="status_disconnected">Pas de connexion</string>
+    <string name="status_label_connecting">CONNEXION</string>
+    <string name="status_label_connected">DÉCONNECTER</string>
+    <string name="status_label_disconnected">CONNECTER</string>
+    <string name="tap_to_connect">Appuyez pour connecter</string>
+    <string name="server_select">Choisir Serveur</string>
+    <string name="current_server">Serveur actuel: %s</string>
+    <string name="please_login">Veuillez vous connecter.</string>
+    <string name="account_title">Mon Compte</string>
+    <string name="logout_success">Déconnecté</string>
+    <string name="subscription_active">Premium Actif</string>
+    <string name="subscription_inactive">Gratuit / Passif</string>
+    <string name="vpn_disconnected">Déconnecté.</string>
+    <string name="premium">Premium</string>
+    <string name="location_selection">Sélection Emplacement</string>
+    <string name="help">Aide</string>
+</resources>

@@ -32,6 +32,9 @@ public class VpnProfile implements Serializable, Cloneable {
     public String mCaFilename;
     public String mClientKeyFilename;
     public String mTLSAuthFilename;
+    public String mAuth;
+    public String mCipher;
+    public String mRemoteCertTls;
 
     // Config içeriğinin tamamı burada saklanacak
     public String mInlineConfig;

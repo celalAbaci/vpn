@@ -1,31 +1,28 @@
 package com.abacicelal.supervpn_project.utils;
 
 import android.content.Context;
+import android.provider.Settings;
 import android.content.SharedPreferences;
 import java.util.UUID;
 
 public class DeviceIdManager {
-    private static final String PREF_NAME = "VPN_PREFS";
-    private static final String KEY_DEVICE_ID = "device_id";
+    private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
 
-    public static String getDeviceId(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        String deviceId = prefs.getString(KEY_DEVICE_ID, null);
-        if (deviceId == null) {
-            deviceId = UUID.randomUUID().toString();
-            prefs.edit().putString(KEY_DEVICE_ID, deviceId).apply();
+    public static String getUniqueDeviceId(Context context) {
+        String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+
+        // Check for known bad IDs or null (9774d56d682e549c is a common generic ID on some emulators/devices)
+        if (androidId == null || androidId.equals("9774d56d682e549c") || androidId.isEmpty()) {
+            SharedPreferences sharedPrefs = context.getSharedPreferences("VPN_PREFS", Context.MODE_PRIVATE);
+            String uuid = sharedPrefs.getString(PREF_UNIQUE_ID, null);
+            if (uuid == null) {
+                uuid = UUID.randomUUID().toString();
+                SharedPreferences.Editor editor = sharedPrefs.edit();
+                editor.putString(PREF_UNIQUE_ID, uuid);
+                editor.apply();
+            }
+            return uuid;
         }
-        return deviceId;
-    }
-
-    public static void saveRegisteredDeviceId(Context context, Long id) {
-        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        prefs.edit().putLong("registered_device_id", id).apply();
-    }
-
-    public static Long getRegisteredDeviceId(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        long id = prefs.getLong("registered_device_id", -1);
-        return id == -1 ? null : id;
+        return androidId;
     }
 }

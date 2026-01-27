@@ -25,6 +25,7 @@ public class ConfigParser {
 
     public void parseConfig(Reader reader) throws IOException, ConfigParseError {
         mReader = new BufferedReader(reader);
+        StringBuilder fullConfig = new StringBuilder();
         String line;
 
         // Inline dosya okuma durumu
@@ -33,6 +34,8 @@ public class ConfigParser {
         String inlineFileTag = "";
 
         while ((line = mReader.readLine()) != null) {
+            fullConfig.append(line).append("\n"); // Append every line to full config
+
             if (line.trim().isEmpty() || line.startsWith("#") || line.startsWith(";"))
                 continue;
 
@@ -66,14 +69,7 @@ public class ConfigParser {
             parseLine(line);
         }
 
-        // Tüm config içeriğini inline olarak sakla (Garanti olsun diye)
-        try {
-            reader.reset();
-            // Reset çalışmazsa diye buffer'dan okumak daha güvenli ama
-            // şimdilik basit tutuyoruz, MainActivity'den gelen string zaten tam config.
-        } catch (IOException e) {
-            // ignore
-        }
+        mResult.mInlineConfig = fullConfig.toString();
     }
 
     private void parseLine(String line) {
@@ -94,8 +90,14 @@ public class ConfigParser {
                 mResult.mConnections[0].mUseUdp = parts[1].toLowerCase().contains("udp");
             }
         }
-        else if (option.equals("client")) {
-            // Client modu, işlem yapmaya gerek yok
+        else if (option.equals("auth") && parts.length > 1) {
+            mResult.mAuth = parts[1];
+        }
+        else if (option.equals("cipher") && parts.length > 1) {
+            mResult.mCipher = parts[1];
+        }
+        else if (option.equals("remote-cert-tls") && parts.length > 1) {
+            mResult.mRemoteCertTls = parts[1];
         }
     }
 

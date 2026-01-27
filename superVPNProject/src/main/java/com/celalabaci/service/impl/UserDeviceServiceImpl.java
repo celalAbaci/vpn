@@ -78,4 +78,18 @@ public class UserDeviceServiceImpl implements IUserDeviceService {
         }
         userDeviceRepository.deleteById(deviceId);
     }
+
+    @Override
+    public UserDevice findOrCreateGuestDevice(String uniqueDeviceId) {
+        return userDeviceRepository.findByUniqueDeviceId(uniqueDeviceId)
+                .orElseGet(() -> {
+                    UserDevice newDevice = new UserDevice();
+                    newDevice.setUniqueDeviceId(uniqueDeviceId);
+                    newDevice.setDeviceName("Guest Device " + uniqueDeviceId.substring(0, Math.min(uniqueDeviceId.length(), 6)));
+                    newDevice.setActive(true);
+                    newDevice.setLastSeen(OffsetDateTime.now());
+                    newDevice.setUser(null); // Explicitly null for guest
+                    return userDeviceRepository.save(newDevice);
+                });
+    }
 }

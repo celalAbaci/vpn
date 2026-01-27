@@ -3,12 +3,14 @@ package com.celalabaci.controller;
 import com.celalabaci.common.ApiResponse;
 import com.celalabaci.dto.vpnserver.VpnServerDto;
 import com.celalabaci.dto.vpnserver.VpnServerCreateUpdateDto;
+import com.celalabaci.entity.User;
 import com.celalabaci.service.IVpnServerService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,9 +24,9 @@ public class VpnServerController {
 
     // Kullanıcıların ve adminlerin erişebileceği, sadece aktif sunucuları listeleyen endpoint
     @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM')")
-    public ResponseEntity<ApiResponse<List<VpnServerDto>>> getActiveServers() {
-        List<VpnServerDto> servers = vpnServerService.getActiveServersForUsers();
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'PREMIUM', 'GUEST')")
+    public ResponseEntity<ApiResponse<List<VpnServerDto>>> getActiveServers(@AuthenticationPrincipal User currentUser) {
+        List<VpnServerDto> servers = vpnServerService.getActiveServersForUsers(currentUser);
         return ResponseEntity.ok(ApiResponse.success(servers));
     }
 

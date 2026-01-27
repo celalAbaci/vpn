@@ -71,11 +71,37 @@ public class LoginActivity extends AppCompatActivity {
     private void continueAsGuest() {
         // Clear tokens just in case
         RetrofitClient.saveToken(this, null, null);
-        Toast.makeText(this, "Misafir Olarak Devam Ediliyor...", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+        Toast.makeText(this, "Misafir Girişi Yapılıyor...", Toast.LENGTH_SHORT).show();
+
+        String deviceId = com.abacicelal.supervpn_project.utils.DeviceIdManager.getUniqueDeviceId(this);
+        java.util.Map<String, String> body = new java.util.HashMap<>();
+        body.put("uniqueDeviceId", deviceId);
+
+        Call<AuthResponse> call = RetrofitClient.getApiService(getApplicationContext()).guestLogin(body);
+        call.enqueue(new Callback<AuthResponse>() {
+            @Override
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    RetrofitClient.saveToken(LoginActivity.this,
+                            response.body().getAccessToken(),
+                            response.body().getRefreshToken());
+
+                    Toast.makeText(LoginActivity.this, "Misafir Girişi Başarılı!", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    Toast.makeText(LoginActivity.this, "Misafir girişi başarısız. Hata kodu: " + response.code(), Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                Toast.makeText(LoginActivity.this, "Bağlantı hatası: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void handleLogin() {

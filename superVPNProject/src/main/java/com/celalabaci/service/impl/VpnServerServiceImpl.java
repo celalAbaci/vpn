@@ -3,6 +3,8 @@ package com.celalabaci.service.impl;
 import com.celalabaci.dto.vpnserver.VpnServerDto;
 import com.celalabaci.dto.vpnserver.VpnServerCreateUpdateDto;
 import com.celalabaci.entity.Country;
+import com.celalabaci.entity.Role;
+import com.celalabaci.entity.User;
 import com.celalabaci.entity.VpnServer;
 import com.celalabaci.exception.BaseException;
 import com.celalabaci.exception.MessageType;
@@ -28,10 +30,14 @@ public class VpnServerServiceImpl implements IVpnServerService {
     private VpnServerMapper vpnServerMapper;
 
     @Override
-    public List<VpnServerDto> getActiveServersForUsers() {
-        // --- DÜZELTME BURASI ---
-        // Hata veren 'findByIsActiveTrue()' yerine 'findByActiveTrue()' kullanıldı.
-        return vpnServerRepository.findByActiveTrue().stream()
+    public List<VpnServerDto> getActiveServersForUsers(User currentUser) {
+        List<VpnServer> servers;
+        if (currentUser == null || currentUser.getRole() == Role.GUEST || currentUser.getRole() == Role.USER) {
+            servers = vpnServerRepository.findByActiveTrueAndFreeTrue();
+        } else {
+            servers = vpnServerRepository.findByActiveTrue();
+        }
+        return servers.stream()
                 .map(vpnServerMapper::toDto)
                 .collect(Collectors.toList());
     }

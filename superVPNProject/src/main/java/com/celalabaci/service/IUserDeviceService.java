@@ -17,4 +17,7 @@ public interface IUserDeviceService {
     // Admin methods
     List<UserDeviceDto> getDevicesByUserId(Long userId);
     void deleteDeviceByAdmin(Long deviceId);
+
+    // Guest methods
+    com.celalabaci.entity.UserDevice findOrCreateGuestDevice(String uniqueDeviceId);
 }
