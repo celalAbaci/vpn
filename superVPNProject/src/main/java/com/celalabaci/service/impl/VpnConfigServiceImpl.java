@@ -39,8 +39,14 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Sunucu bulunamadı"));
 
         UserDevice device = null;
-        if (currentUser != null && request.getDeviceId() != null) {
+        if (request.getDeviceId() != null) {
             device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+        }
+
+        // Misafir kullanıcılar için unique ID'den cihazı bul
+        if (device == null && currentUser != null && currentUser.getUsername().startsWith("GUEST_")) {
+            String uniqueId = currentUser.getUsername().substring(6); // "GUEST_" prefixini at
+            device = userDeviceRepository.findByUniqueDeviceId(uniqueId).orElse(null);
         }
 
         String configContent = "";
@@ -66,6 +72,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("remote-cert-tls server\n");
             sb.append("auth SHA512\n");
             sb.append("ignore-unknown-option block-outside-dns\n");
+            // Shaper (Hız Limiti) Eklemesi
+            // Premium olmayan (User, Guest) herkese limit uygula
+            boolean isPremium = currentUser != null && com.celalabaci.entity.Role.PREMIUM.equals(currentUser.getRole());
+            if (!isPremium) {
+                sb.append("ignore-unknown-option shaper\n");
+                sb.append("shaper 2000000\n"); // 2MB/s (~16Mbps)
+            }
             sb.append("verb 3\n");
 
             if (ovpn.getCaCert() != null)
@@ -88,20 +101,28 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         // Loglama
         try {
-            if (currentUser != null) {
-                UserVpnConfig logRecord = new UserVpnConfig();
+             // Misafir kullanıcıların (currentUser=null olmasa da gerçek DB user'ı değil) loglanması
+             // User null olabilir (Guest için), ama cihaz varsa loglayalım.
+            UserVpnConfig logRecord = new UserVpnConfig();
+
+            // Eğer GUEST ise user null set edilebilir veya transient user.
+            // Entity'de user nullable yaptık.
+            // Transient user JPA hatası verebilir (unsaved instance).
+            // O yüzden GUEST ise null geçiyoruz.
+            if (currentUser != null && currentUser.getUsername().startsWith("GUEST_")) {
+                logRecord.setUser(null);
+            } else {
                 logRecord.setUser(currentUser);
-                logRecord.setServer(entryServer);
-                logRecord.setConfigContent(configContent);
-
-                // Entity'de 'protocol' alanı olduğu için bunu tekrar ekliyoruz
-                logRecord.setProtocol(protocol);
-
-                // UserVpnConfig sınıfına 'active' alanını eklediğimiz için bu artık çalışacak
-                logRecord.setActive(true);
-
-                userVpnConfigRepository.save(logRecord);
             }
+
+            logRecord.setDevice(device);
+            logRecord.setServer(entryServer);
+            logRecord.setConfigContent(configContent);
+            logRecord.setProtocol(protocol);
+            logRecord.setActive(true);
+
+            userVpnConfigRepository.save(logRecord);
+
         } catch (Exception e) {
             log.error("Config loglanırken hata oluştu: " + e.getMessage());
         }

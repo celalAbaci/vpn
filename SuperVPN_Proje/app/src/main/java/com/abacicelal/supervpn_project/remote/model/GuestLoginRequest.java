@@ -1,0 +1,32 @@
+package com.abacicelal.supervpn_project.remote.model;
+
+import com.google.gson.annotations.SerializedName;
+
+public class GuestLoginRequest {
+    @SerializedName("uniqueDeviceId")
+    private String uniqueDeviceId;
+
+    @SerializedName("deviceName")
+    private String deviceName;
+
+    public GuestLoginRequest(String uniqueDeviceId, String deviceName) {
+        this.uniqueDeviceId = uniqueDeviceId;
+        this.deviceName = deviceName;
+    }
+
+    public String getUniqueDeviceId() {
+        return uniqueDeviceId;
+    }
+
+    public void setUniqueDeviceId(String uniqueDeviceId) {
+        this.uniqueDeviceId = uniqueDeviceId;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
+    }
+}

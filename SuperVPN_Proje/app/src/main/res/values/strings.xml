@@ -49,4 +49,5 @@
     <string name="browser">Browser</string>
     <string name="location_selection">Location Selection</string>
     <string name="help">Help</string>
+    <string name="guest_login">Guest Login</string>
 </resources>
