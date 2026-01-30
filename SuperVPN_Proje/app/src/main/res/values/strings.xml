@@ -49,4 +49,15 @@
     <string name="browser">Browser</string>
     <string name="location_selection">Location Selection</string>
     <string name="help">Help</string>
+
+    <!-- Guest Login & Auth -->
+    <string name="guest_login_btn">Continue as Guest</string>
+    <string name="guest_login_progress">Logging in as Guest...</string>
+    <string name="guest_mode_active">Guest Mode Active!</string>
+    <string name="guest_login_failed">Guest login failed. Please try again.</string>
+    <string name="fill_all_fields">Please fill all fields.</string>
+    <string name="login_progress">Logging in...</string>
+    <string name="login_success">Login Successful!</string>
+    <string name="login_failed">Login failed! Check your credentials.</string>
+    <string name="connection_error">Connection Error: %s</string>
 </resources>

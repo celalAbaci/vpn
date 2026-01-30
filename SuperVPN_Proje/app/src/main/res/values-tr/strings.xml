@@ -44,4 +44,20 @@
     <string name="super_error">Super Protocol Hatası: %s</string>
     <string name="vpn_disconnected">Bağlantı kesildi.</string>
     <string name="server_select_first">Lütfen önce bir sunucu seçin.</string>
+    <string name="menu">Menü</string>
+    <string name="premium">Premium</string>
+    <string name="browser">Tarayıcı</string>
+    <string name="location_selection">Konum Seçimi</string>
+    <string name="help">Yardım</string>
+
+    <!-- Guest Login & Auth -->
+    <string name="guest_login_btn">Misafir Olarak Devam Et</string>
+    <string name="guest_login_progress">Misafir girişi yapılıyor...</string>
+    <string name="guest_mode_active">Misafir Modu Aktif!</string>
+    <string name="guest_login_failed">Misafir girişi başarısız. Lütfen tekrar deneyin.</string>
+    <string name="fill_all_fields">Lütfen tüm alanları doldurun.</string>
+    <string name="login_progress">Giriş Yapılıyor...</string>
+    <string name="login_success">Giriş Başarılı!</string>
+    <string name="login_failed">Giriş başarısız! Bilgilerinizi kontrol edin.</string>
+    <string name="connection_error">Bağlantı Hatası: %s</string>
 </resources>

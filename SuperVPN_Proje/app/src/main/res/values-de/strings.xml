@@ -44,4 +44,20 @@
     <string name="super_error">Super Protokoll Fehler: %s</string>
     <string name="vpn_disconnected">Verbindung getrennt.</string>
     <string name="server_select_first">Bitte wählen Sie zuerst einen Server aus.</string>
+    <string name="menu">Menü</string>
+    <string name="premium">Premium</string>
+    <string name="browser">Browser</string>
+    <string name="location_selection">Standortauswahl</string>
+    <string name="help">Hilfe</string>
+
+    <!-- Guest Login & Auth -->
+    <string name="guest_login_btn">Als Gast fortfahren</string>
+    <string name="guest_login_progress">Gast-Anmeldung läuft...</string>
+    <string name="guest_mode_active">Gastmodus aktiv!</string>
+    <string name="guest_login_failed">Gast-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.</string>
+    <string name="fill_all_fields">Bitte füllen Sie alle Felder aus.</string>
+    <string name="login_progress">Anmeldung läuft...</string>
+    <string name="login_success">Anmeldung erfolgreich!</string>
+    <string name="login_failed">Anmeldung fehlgeschlagen! Überprüfen Sie Ihre Zugangsdaten.</string>
+    <string name="connection_error">Verbindungsfehler: %s</string>
 </resources>
