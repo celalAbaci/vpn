@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">SuperVPN</string>
+    <string name="status_connected">CONNECTÉ</string>
+    <string name="status_disconnected">DÉCONNECTÉ</string>
+    <string name="status_connecting">CONNEXION...</string>
+    <string name="tap_to_connect">APPUYER POUR CONNECTER</string>
+    <string name="server_select">Sélectionner un serveur</string>
+    <string name="current_server">Serveur: %s</string>
+    <string name="account_title">Compte</string>
+    <string name="error_active_subscription">Aucun abonnement actif trouvé.</string>
+    <string name="network_error_sub">Erreur d\'abonnement: %s</string>
+    <string name="vpn_disconnected">VPN Déconnecté</string>
+    <string name="browser_open_error">Impossible d\'ouvrir le navigateur</string>
+    <string name="status_label_connected">SÉCURISÉ</string>
+    <string name="status_label_disconnected">NON SÉCURISÉ</string>
+    <string name="status_label_connecting">VEUILLEZ PATIENTER</string>
+    <string name="device_registration_failed">L\'enregistrement de l\'appareil a échoué.</string>
+    <string name="network_error_register">Erreur d\'enregistrement: %s</string>
+    <string name="server_select_first">Veuillez d\'abord sélectionner un serveur.</string>
+    <string name="config_error">Erreur de configuration: %d</string>
+    <string name="network_error_config">Erreur de récupération de la configuration: %s</string>
+    <string name="error_device_info">Impossible d\'obtenir les informations sur l\'appareil.</string>
+    <string name="network_error_device">Erreur réseau: %s</string>
+    <string name="error_subscription_check">Échec de la vérification de l\'abonnement.</string>
+</resources>

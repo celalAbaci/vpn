@@ -269,12 +269,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
 
     private void fetchDeviceAndCheckSubscription() {
         if (RetrofitClient.getToken(this) == null) {
-            Long registeredId = DeviceIdManager.getRegisteredDeviceId(this);
-            if (registeredId != null) {
-                checkSubscription(registeredId);
-            } else {
-                registerDevice();
-            }
+            guestLogin();
             return;
         }
 
@@ -300,21 +295,37 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
         });
     }
 
-    private void registerDevice() {
-        String deviceName = "Android " + android.os.Build.MODEL;
-        apiService.registerDevice(new DeviceRequest(deviceName)).enqueue(new Callback<ApiResponse<Device>>() {
+    private void guestLogin() {
+        String deviceId = DeviceIdManager.getDeviceId(this);
+        java.util.Map<String, String> body = new java.util.HashMap<>();
+        body.put("uniqueDeviceId", deviceId);
+
+        apiService.guestLogin(body).enqueue(new Callback<java.util.Map<String, Object>>() {
             @Override
-            public void onResponse(Call<ApiResponse<Device>> call, Response<ApiResponse<Device>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    checkSubscription(response.body().getData().getId());
+            public void onResponse(Call<java.util.Map<String, Object>> call, Response<java.util.Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String token = (String) response.body().get("token");
+                    if (token != null) {
+                        RetrofitClient.saveToken(MainActivity.this, token, null);
+                    }
+
+                    Object devIdObj = response.body().get("deviceId");
+                    Long registeredId = null;
+                    if (devIdObj instanceof Number) {
+                        registeredId = ((Number) devIdObj).longValue();
+                        DeviceIdManager.saveRegisteredDeviceId(MainActivity.this, registeredId);
+                        checkSubscription(registeredId);
+                    } else {
+                         handleConnectionFailure("Guest Login Failed: Invalid Device ID");
+                    }
                 } else {
-                    handleConnectionFailure(getString(R.string.device_registration_failed));
+                    handleConnectionFailure("Guest Login Failed: " + response.code());
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Device>> call, Throwable t) {
-                handleConnectionFailure(String.format(getString(R.string.network_error_register), t.getMessage()));
+            public void onFailure(Call<java.util.Map<String, Object>> call, Throwable t) {
+                handleConnectionFailure("Guest Login Network Error: " + t.getMessage());
             }
         });
     }

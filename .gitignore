@@ -1,0 +1,13 @@
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+/superVPNProject/target/
+/SuperVPN_Proje/build/
+/SuperVPN_Proje/app/build/
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+node_modules/
+web-frontend/node_modules/
+web-frontend/build/
