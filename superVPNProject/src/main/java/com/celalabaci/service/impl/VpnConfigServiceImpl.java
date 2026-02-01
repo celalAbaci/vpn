@@ -68,6 +68,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("ignore-unknown-option block-outside-dns\n");
             sb.append("verb 3\n");
 
+            // Hız Limiti: Premium olmayanlar (Guest/Free) için 16Mbps (2MB/s) limit
+            boolean isPremium = currentUser != null && currentUser.getRole() == com.celalabaci.entity.Role.PREMIUM;
+            if (!isPremium) {
+                sb.append("shaper 2000000\n");
+                sb.append("ignore-unknown-option shaper\n");
+            }
+
             if (ovpn.getCaCert() != null)
                 sb.append("<ca>\n").append(ovpn.getCaCert()).append("\n</ca>\n");
 

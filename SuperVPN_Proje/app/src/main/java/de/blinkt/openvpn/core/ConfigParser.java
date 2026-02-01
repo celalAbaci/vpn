@@ -26,6 +26,7 @@ public class ConfigParser {
     public void parseConfig(Reader reader) throws IOException, ConfigParseError {
         mReader = new BufferedReader(reader);
         String line;
+        StringBuilder fullConfigBuilder = new StringBuilder();
 
         // Inline dosya okuma durumu
         boolean inInlineFile = false;
@@ -33,6 +34,8 @@ public class ConfigParser {
         String inlineFileTag = "";
 
         while ((line = mReader.readLine()) != null) {
+            fullConfigBuilder.append(line).append("\n");
+
             if (line.trim().isEmpty() || line.startsWith("#") || line.startsWith(";"))
                 continue;
 
@@ -66,14 +69,10 @@ public class ConfigParser {
             parseLine(line);
         }
 
-        // Tüm config içeriğini inline olarak sakla (Garanti olsun diye)
-        try {
-            reader.reset();
-            // Reset çalışmazsa diye buffer'dan okumak daha güvenli ama
-            // şimdilik basit tutuyoruz, MainActivity'den gelen string zaten tam config.
-        } catch (IOException e) {
-            // ignore
-        }
+        // Kritik Düzeltme: Tüm konfigürasyonu inline config olarak ayarla.
+        // Bu sayede parseLine tarafından yakalanmayan custom optionlar (shaper, cipher vb.)
+        // native OpenVPN process'ine doğrudan iletilir.
+        mResult.mInlineConfig = fullConfigBuilder.toString();
     }
 
     private void parseLine(String line) {
