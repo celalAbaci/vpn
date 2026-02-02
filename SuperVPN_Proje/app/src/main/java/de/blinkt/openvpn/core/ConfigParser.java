@@ -25,58 +25,27 @@ public class ConfigParser {
 
     public void parseConfig(Reader reader) throws IOException, ConfigParseError {
         mReader = new BufferedReader(reader);
+        StringBuilder fullConfig = new StringBuilder();
         String line;
 
-        // Inline dosya okuma durumu
-        boolean inInlineFile = false;
-        StringBuilder inlineFileBuffer = new StringBuilder();
-        String inlineFileTag = "";
-
+        // Read everything first to ensure mInlineConfig is complete
         while ((line = mReader.readLine()) != null) {
-            if (line.trim().isEmpty() || line.startsWith("#") || line.startsWith(";"))
-                continue;
-
-            // <ca>, <cert> vb. inline blokları yakala
-            if (line.trim().startsWith("<") && !line.trim().startsWith("</")) {
-                inInlineFile = true;
-                inlineFileTag = line.trim().substring(1, line.trim().indexOf('>'));
-                inlineFileBuffer = new StringBuilder();
-                continue;
-            }
-
-            if (line.trim().startsWith("</")) {
-                inInlineFile = false;
-                String content = inlineFileBuffer.toString();
-
-                // Yakalanan içeriği profile ata
-                if (inlineFileTag.equals("ca")) mResult.mCaFilename = "[[INLINE]]" + content;
-                else if (inlineFileTag.equals("cert")) mResult.mClientCertFilename = "[[INLINE]]" + content;
-                else if (inlineFileTag.equals("key")) mResult.mClientKeyFilename = "[[INLINE]]" + content;
-                else if (inlineFileTag.equals("tls-auth") || inlineFileTag.equals("tls-crypt")) mResult.mTLSAuthFilename = "[[INLINE]]" + content;
-
-                continue;
-            }
-
-            if (inInlineFile) {
-                inlineFileBuffer.append(line).append("\n");
-                continue;
-            }
-
-            // Normal ayarları işle
+            fullConfig.append(line).append("\n");
             parseLine(line);
         }
 
-        // Tüm config içeriğini inline olarak sakla (Garanti olsun diye)
-        try {
-            reader.reset();
-            // Reset çalışmazsa diye buffer'dan okumak daha güvenli ama
-            // şimdilik basit tutuyoruz, MainActivity'den gelen string zaten tam config.
-        } catch (IOException e) {
-            // ignore
+        mResult.mInlineConfig = fullConfig.toString();
+
+        // Ensure some defaults if not parsed
+        if (mResult.mConnections[0].mServerName == null) {
+             mResult.mConnections[0].mServerName = "Unknown Server";
         }
     }
 
     private void parseLine(String line) {
+        line = line.trim();
+        if (line.isEmpty() || line.startsWith("#") || line.startsWith(";")) return;
+
         String[] parts = line.split("\\s+");
         if (parts.length == 0) return;
 
@@ -94,17 +63,9 @@ public class ConfigParser {
                 mResult.mConnections[0].mUseUdp = parts[1].toLowerCase().contains("udp");
             }
         }
-        else if (option.equals("client")) {
-            // Client modu, işlem yapmaya gerek yok
-        }
     }
 
     public VpnProfile convertProfile() {
-        // Profilin tamamlanmış halini döndür
-        // MainActivity'deki startOpenVpn metodunda configContent 
-        // mInlineConfig içine yazılmalı.
         return mResult;
     }
-
-    // Orijinal koddaki eksik metodu bypass etmek için bu sınıfı güncelledik.
 }

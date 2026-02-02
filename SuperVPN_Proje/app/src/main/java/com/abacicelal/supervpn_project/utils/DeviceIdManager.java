@@ -12,7 +12,14 @@ public class DeviceIdManager {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         String deviceId = prefs.getString(KEY_DEVICE_ID, null);
         if (deviceId == null) {
-            deviceId = UUID.randomUUID().toString();
+            try {
+                deviceId = android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+                if ("9774d56d682e549c".equals(deviceId) || deviceId == null) {
+                    deviceId = UUID.randomUUID().toString();
+                }
+            } catch (Exception e) {
+                deviceId = UUID.randomUUID().toString();
+            }
             prefs.edit().putString(KEY_DEVICE_ID, deviceId).apply();
         }
         return deviceId;

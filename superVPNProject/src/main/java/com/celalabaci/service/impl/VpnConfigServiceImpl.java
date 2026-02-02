@@ -4,6 +4,7 @@ import com.celalabaci.dto.agent.AgentDTOs;
 import com.celalabaci.dto.config.VpnConfigGenerationRequest;
 import com.celalabaci.dto.config.VpnConfigResponse;
 import com.celalabaci.dto.config.VpnProtocol;
+import com.celalabaci.entity.Role;
 import com.celalabaci.entity.User;
 import com.celalabaci.entity.UserDevice;
 import com.celalabaci.entity.UserVpnConfig;
@@ -39,8 +40,15 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Sunucu bulunamadı"));
 
         UserDevice device = null;
-        if (currentUser != null && request.getDeviceId() != null) {
+        if (request.getDeviceId() != null) {
             device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
+        }
+
+        // Access Control
+        boolean isPremium = currentUser != null && currentUser.getRole() == Role.PREMIUM;
+
+        if (!isPremium && !entryServer.isFree()) {
+             throw new ConfigGenerationException(MessageType.GENERAL_EXCEPTION, "Bu sunucu sadece Premium üyeler içindir.");
         }
 
         String configContent = "";
@@ -51,6 +59,13 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             AgentDTOs.OpenVpnCredentials ovpn = vpnApiAgentService.provisionOpenVpnUser(entryServer, currentUser, device);
 
             StringBuilder sb = new StringBuilder();
+
+            // Speed Limit for Guests and Free Users
+            if (!isPremium) {
+                 sb.append("shaper 2000000\n");
+                 sb.append("ignore-unknown-option shaper\n");
+            }
+
             sb.append("client\n");
             sb.append("dev tun\n");
 
