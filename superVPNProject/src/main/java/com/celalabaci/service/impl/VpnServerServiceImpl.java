@@ -11,6 +11,9 @@ import com.celalabaci.repository.CountryRepository;
 import com.celalabaci.repository.VpnServerRepository;
 import com.celalabaci.service.IVpnServerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,11 +32,27 @@ public class VpnServerServiceImpl implements IVpnServerService {
 
     @Override
     public List<VpnServerDto> getActiveServersForUsers() {
-        // --- DÜZELTME BURASI ---
-        // Hata veren 'findByIsActiveTrue()' yerine 'findByActiveTrue()' kullanıldı.
-        return vpnServerRepository.findByActiveTrue().stream()
-                .map(vpnServerMapper::toDto)
-                .collect(Collectors.toList());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isPremium = false;
+        boolean isAdmin = false;
+
+        if (authentication != null && authentication.getAuthorities() != null) {
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                if ("ROLE_PREMIUM".equals(authority.getAuthority())) isPremium = true;
+                if ("ROLE_ADMIN".equals(authority.getAuthority())) isAdmin = true;
+            }
+        }
+
+        if (isPremium || isAdmin) {
+            return vpnServerRepository.findByActiveTrue().stream()
+                    .map(vpnServerMapper::toDto)
+                    .collect(Collectors.toList());
+        } else {
+            // Guest or Free User
+            return vpnServerRepository.findByActiveTrueAndFreeTrue().stream()
+                    .map(vpnServerMapper::toDto)
+                    .collect(Collectors.toList());
+        }
     }
 
     @Override

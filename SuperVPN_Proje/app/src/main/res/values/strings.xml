@@ -49,4 +49,7 @@
     <string name="browser">Browser</string>
     <string name="location_selection">Location Selection</string>
     <string name="help">Help</string>
+    <string name="continue_as_guest">Continue as Guest</string>
+    <string name="guest_login_success">Guest Login Successful</string>
+    <string name="guest_login_failed">Guest Login Failed</string>
 </resources>

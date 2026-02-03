@@ -39,13 +39,18 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
                 .orElseThrow(() -> new ConfigGenerationException(MessageType.NO_RECORD_EXIST, "Sunucu bulunamadı"));
 
         UserDevice device = null;
-        if (currentUser != null && request.getDeviceId() != null) {
+        if (request.getDeviceId() != null) {
             device = userDeviceRepository.findById(request.getDeviceId()).orElse(null);
         }
 
         String configContent = "";
 
         VpnProtocol protocol = request.getProtocol() != null ? request.getProtocol() : VpnProtocol.OPENVPN;
+
+        boolean isLimited = true;
+        if (currentUser != null && (currentUser.getRole() == com.celalabaci.entity.Role.PREMIUM || currentUser.getRole() == com.celalabaci.entity.Role.ADMIN)) {
+            isLimited = false;
+        }
 
         if (protocol == VpnProtocol.OPENVPN) {
             AgentDTOs.OpenVpnCredentials ovpn = vpnApiAgentService.provisionOpenVpnUser(entryServer, currentUser, device);
@@ -66,6 +71,12 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
             sb.append("remote-cert-tls server\n");
             sb.append("auth SHA512\n");
             sb.append("ignore-unknown-option block-outside-dns\n");
+
+            if (isLimited) {
+                sb.append("shaper 2000000\n");
+                sb.append("ignore-unknown-option shaper\n");
+            }
+
             sb.append("verb 3\n");
 
             if (ovpn.getCaCert() != null)
@@ -88,20 +99,21 @@ public class VpnConfigServiceImpl implements IVpnConfigService {
 
         // Loglama
         try {
+            UserVpnConfig logRecord = new UserVpnConfig();
             if (currentUser != null) {
-                UserVpnConfig logRecord = new UserVpnConfig();
                 logRecord.setUser(currentUser);
-                logRecord.setServer(entryServer);
-                logRecord.setConfigContent(configContent);
-
-                // Entity'de 'protocol' alanı olduğu için bunu tekrar ekliyoruz
-                logRecord.setProtocol(protocol);
-
-                // UserVpnConfig sınıfına 'active' alanını eklediğimiz için bu artık çalışacak
-                logRecord.setActive(true);
-
-                userVpnConfigRepository.save(logRecord);
             }
+            logRecord.setDevice(device); // Device set ediliyor (null olabilir)
+            logRecord.setServer(entryServer);
+            logRecord.setConfigContent(configContent);
+
+            // Entity'de 'protocol' alanı olduğu için bunu tekrar ekliyoruz
+            logRecord.setProtocol(protocol);
+
+            // UserVpnConfig sınıfına 'active' alanını eklediğimiz için bu artık çalışacak
+            logRecord.setActive(true);
+
+            userVpnConfigRepository.save(logRecord);
         } catch (Exception e) {
             log.error("Config loglanırken hata oluştu: " + e.getMessage());
         }

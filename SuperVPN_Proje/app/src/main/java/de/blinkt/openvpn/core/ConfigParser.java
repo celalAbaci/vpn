@@ -26,6 +26,7 @@ public class ConfigParser {
     public void parseConfig(Reader reader) throws IOException, ConfigParseError {
         mReader = new BufferedReader(reader);
         String line;
+        StringBuilder fullConfig = new StringBuilder();
 
         // Inline dosya okuma durumu
         boolean inInlineFile = false;
@@ -33,6 +34,8 @@ public class ConfigParser {
         String inlineFileTag = "";
 
         while ((line = mReader.readLine()) != null) {
+            fullConfig.append(line).append("\n");
+
             if (line.trim().isEmpty() || line.startsWith("#") || line.startsWith(";"))
                 continue;
 
@@ -66,14 +69,7 @@ public class ConfigParser {
             parseLine(line);
         }
 
-        // Tüm config içeriğini inline olarak sakla (Garanti olsun diye)
-        try {
-            reader.reset();
-            // Reset çalışmazsa diye buffer'dan okumak daha güvenli ama
-            // şimdilik basit tutuyoruz, MainActivity'den gelen string zaten tam config.
-        } catch (IOException e) {
-            // ignore
-        }
+        mResult.mInlineConfig = fullConfig.toString();
     }
 
     private void parseLine(String line) {

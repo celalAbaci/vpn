@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">SuperVPN Project</string>
+    <string name="status_connecting">Connexion...</string>
+    <string name="status_connected">Connecté</string>
+    <string name="status_disconnected">Pas de connexion</string>
+    <string name="status_label_connecting">CONNEXION</string>
+    <string name="status_label_connected">DÉCONNECTER</string>
+    <string name="status_label_disconnected">CONNECTER</string>
+    <string name="tap_to_connect">Appuyez pour connecter</string>
+    <string name="server_select">Sélectionner un serveur</string>
+    <string name="current_server">Serveur actuel: %s</string>
+    <string name="please_login">Veuillez vous connecter d\'abord.</string>
+    <string name="error_device_info">Impossible d\'obtenir les infos de l\'appareil.</string>
+    <string name="error_subscription_check">Impossible de vérifier l\'abonnement.</string>
+    <string name="error_active_subscription">Aucun abonnement actif trouvé.</string>
+    <string name="vpn_disconnected">Déconnecté.</string>
+    <string name="server_select_first">Veuillez d\'abord sélectionner un serveur.</string>
+    <string name="menu">Menu</string>
+    <string name="premium">Premium</string>
+    <string name="browser">Navigateur</string>
+    <string name="location_selection">Sélection de l\'emplacement</string>
+    <string name="help">Aide</string>
+    <string name="continue_as_guest">Continuer en tant qu\'invité</string>
+    <string name="guest_login_success">Connexion invité réussie</string>
+    <string name="guest_login_failed">Échec de la connexion invité</string>
+    <string name="account_title">Mon Compte</string>
+</resources>

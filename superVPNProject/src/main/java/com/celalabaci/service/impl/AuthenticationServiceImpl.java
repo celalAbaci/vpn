@@ -7,7 +7,9 @@ import com.celalabaci.entity.User;
 import com.celalabaci.exception.BaseException;
 import com.celalabaci.exception.MessageType;
 import com.celalabaci.jwt.JwtService;
+import com.celalabaci.entity.UserDevice;
 import com.celalabaci.repository.RefreshTokenRepository;
+import com.celalabaci.repository.UserDeviceRepository;
 import com.celalabaci.repository.UserRepository;
 import com.celalabaci.service.IAuthenticationService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import java.util.UUID;
 public class AuthenticationServiceImpl implements IAuthenticationService {
 
     private final UserRepository userRepository;
+    private final UserDeviceRepository userDeviceRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -98,5 +101,34 @@ public class AuthenticationServiceImpl implements IAuthenticationService {
         // Refresh token ömrünü 7 gün olarak ayarlayalım
         refreshToken.setExpiresAt(OffsetDateTime.now().plusDays(7));
         return refreshTokenRepository.save(refreshToken);
+    }
+
+    @Override
+    public AuthResponse guestLogin(String uniqueDeviceId) {
+        // Cihazı bul veya oluştur
+        UserDevice device = userDeviceRepository.findByUniqueDeviceId(uniqueDeviceId)
+                .orElseGet(() -> {
+                    UserDevice newDevice = new UserDevice();
+                    newDevice.setUniqueDeviceId(uniqueDeviceId);
+                    // uniqueDeviceId null gelirse hata vermemesi için kontrol eklenebilir ama şimdilik güveniyoruz
+                    String safeId = (uniqueDeviceId != null && uniqueDeviceId.length() >= 8) ? uniqueDeviceId.substring(0, 8) : "UNKNOWN";
+                    newDevice.setDeviceName("Guest-" + safeId);
+                    newDevice.setActive(true);
+                    newDevice.setLastSeen(OffsetDateTime.now());
+                    return userDeviceRepository.save(newDevice);
+                });
+
+        // Transient (DB'de olmayan) bir User objesi oluştur
+        User guestUser = new User();
+        // ID set etmiyoruz (null), çünkü DB'de yok. JWT servisi ID'ye ihtiyaç duyuyorsa hata alabiliriz.
+        // Ancak genellikle username kullanılır.
+        guestUser.setUsername("GUEST_" + uniqueDeviceId);
+        guestUser.setRole(Role.GUEST);
+
+        // JWT üret
+        String jwtToken = jwtService.generateToken(guestUser);
+
+        // Refresh token misafirler için şimdilik null dönüyor
+        return new AuthResponse(jwtToken, null);
     }
 }

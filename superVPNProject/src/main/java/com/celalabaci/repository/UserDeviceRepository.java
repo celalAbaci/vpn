@@ -10,6 +10,8 @@ import java.util.Optional;
 @Repository
 public interface UserDeviceRepository extends JpaRepository<UserDevice, Long> {
 
+    Optional<UserDevice> findByUniqueDeviceId(String uniqueDeviceId);
+
     /**
      * Finds all devices associated with a specific user ID.
      * @param userId The ID of the user.

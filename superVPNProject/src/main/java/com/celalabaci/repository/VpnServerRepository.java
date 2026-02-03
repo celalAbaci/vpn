@@ -13,6 +13,9 @@ public interface VpnServerRepository extends JpaRepository<VpnServer, Long> {
     // YÖNTEM BU: "Active" olanları getir. "Is" kelimesini kaldırdık.
     List<VpnServer> findByActiveTrue();
 
+    // Misafir ve Free userlar için
+    List<VpnServer> findByActiveTrueAndFreeTrue();
+
     // IP adresi kontrolü
     boolean existsByServerIpAddressIgnoreCase(String serverIpAddress);
 
