@@ -42,4 +42,7 @@ public class VpnServer extends BaseEntity {
 
     @Column(name = "is_active")
     private boolean isActive = true;
+
+    @Column(name = "is_free")
+    private boolean isFree = false;
 }

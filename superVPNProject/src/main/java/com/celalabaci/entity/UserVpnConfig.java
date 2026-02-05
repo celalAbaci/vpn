@@ -8,12 +8,20 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "user_vpn_configs")
+@Table(name = "user_vpn_configs", indexes = {
+        @Index(name = "idx_config_user", columnList = "user_id"),
+        @Index(name = "idx_config_device", columnList = "device_id"),
+        @Index(name = "idx_config_server", columnList = "server_id")
+})
 public class UserVpnConfig extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "device_id", nullable = true)
+    private UserDevice device;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "server_id", nullable = false)

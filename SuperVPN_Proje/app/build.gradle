@@ -14,6 +14,9 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
     }
 
     buildFeatures {
@@ -42,6 +45,9 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.core:core-ktx:1.12.0' // Added for Kotlin/Core
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+    implementation 'com.wireguard.android:tunnel:1.3.17'
+    implementation 'androidx.preference:preference:1.2.1'
 
     // Retrofit & OkHttp
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'

@@ -30,6 +30,7 @@ import androidx.core.content.ContextCompat;
 import com.abacicelal.supervpn_project.remote.ApiService;
 import com.abacicelal.supervpn_project.remote.RetrofitClient;
 import com.abacicelal.supervpn_project.remote.model.ApiResponse;
+import com.abacicelal.supervpn_project.remote.model.AuthResponse;
 import com.abacicelal.supervpn_project.remote.model.ConfigGenerationRequest;
 import com.abacicelal.supervpn_project.remote.model.Device;
 import com.abacicelal.supervpn_project.remote.model.DeviceRequest;
@@ -40,7 +41,9 @@ import com.abacicelal.supervpn_project.utils.DeviceIdManager;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -269,12 +272,7 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
 
     private void fetchDeviceAndCheckSubscription() {
         if (RetrofitClient.getToken(this) == null) {
-            Long registeredId = DeviceIdManager.getRegisteredDeviceId(this);
-            if (registeredId != null) {
-                checkSubscription(registeredId);
-            } else {
-                registerDevice();
-            }
+            performGuestLogin();
             return;
         }
 
@@ -296,6 +294,30 @@ public class MainActivity extends AppCompatActivity implements VpnStatus.StateLi
             @Override
             public void onFailure(Call<ApiResponse<List<Device>>> call, Throwable t) {
                 handleConnectionFailure(String.format(getString(R.string.network_error_device), t.getMessage()));
+            }
+        });
+    }
+
+    private void performGuestLogin() {
+        String uniqueId = DeviceIdManager.getDeviceId(this);
+        Map<String, String> request = new HashMap<>();
+        request.put("uniqueDeviceId", uniqueId);
+
+        apiService.guestLogin(request).enqueue(new Callback<AuthResponse>() {
+            @Override
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    AuthResponse auth = response.body();
+                    RetrofitClient.saveToken(MainActivity.this, auth.getAccessToken(), auth.getRefreshToken());
+                    fetchDeviceAndCheckSubscription();
+                } else {
+                    handleConnectionFailure("Misafir girişi başarısız: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                handleConnectionFailure("Ağ hatası (Misafir): " + t.getMessage());
             }
         });
     }

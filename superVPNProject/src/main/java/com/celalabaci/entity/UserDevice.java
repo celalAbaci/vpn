@@ -17,6 +17,9 @@ public class UserDevice extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
+    @Column(name = "unique_device_id", unique = true, length = 100)
+    private String uniqueDeviceId;
+
     @Column(name = "device_name", nullable = false, length = 100)
     private String deviceName;
 
