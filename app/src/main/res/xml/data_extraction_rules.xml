@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample data extraction rules file; uncomment and customize as necessary.
+   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
+   for details.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Token ve cihaz kimliği içeren SharedPreferences dosyalarını bulut yedeklemeden hariç tut -->
+        <exclude domain="sharedpref" path="VPN_PREFS.xml"/>
+        <exclude domain="sharedpref" path="VPN_PREFS_SECURE.xml"/>
+        <exclude domain="sharedpref" path="vpn_prefs.xml"/>
+    </cloud-backup>
+    <device-transfer>
+        <!-- Cihaz transferinde de hassas verileri hariç tut -->
+        <exclude domain="sharedpref" path="VPN_PREFS.xml"/>
+        <exclude domain="sharedpref" path="VPN_PREFS_SECURE.xml"/>
+        <exclude domain="sharedpref" path="vpn_prefs.xml"/>
+    </device-transfer>
+</data-extraction-rules>

@@ -1,0 +1,92 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.abacicelal.supervpn_project">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <application
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:label="SuperVPN"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SuperVPN_Project"
+        android:usesCleartextTraffic="false"
+        android:extractNativeLibs="true">
+
+
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".MainActivity" />
+        <activity android:name=".ServerSelectionActivity" />
+        <activity android:name=".LanguageSelectionActivity" />
+        <activity android:name=".PremiumActivity" />
+        <activity android:name=".HelpSupportActivity" />
+        <activity android:name=".AboutActivity" />
+        <activity android:name=".UserProfileActivity" />
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".AccountActivity" />
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".RegisterActivity" />
+        <activity android:name=".AlwaysOnVpnActivity" />
+        <activity android:name=".AnnouncementsActivity" />
+
+        <!-- OpenVPN Service from Library -->
+        <service
+            android:name="de.blinkt.openvpn.core.OpenVPNService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:exported="true"
+            android:foregroundServiceType="specialUse"> <intent-filter>
+            <action android:name="android.net.VpnService" />
+        </intent-filter>
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="vpn" />
+        </service>
+
+        <!-- Stealth (VLESS+Reality) VPN Service -->
+        <service
+            android:name=".core.StealthVpnService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:exported="true"
+            android:foregroundServiceType="specialUse">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="vpn" />
+        </service>
+
+        <!-- Xray (LibXray/Xray-core) VPN Service -->
+        <service
+            android:name=".core.XrayVpnService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:exported="true"
+            android:foregroundServiceType="specialUse">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="vpn" />
+        </service>
+
+        <!-- Necessary activities for the library if it exposes them,
+             but kaikelmax usually uses its own or standard ones.
+             If the library re-uses de.blinkt namespace (which it often does as a fork),
+             we keep the service declaration. kaikelmax library uses de.blinkt.openvpn.core.OpenVPNService internally.
+        -->
+        <service
+            android:name="de.blinkt.openvpn.core.keepVPNAlive"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true"/>
+
+    </application>
+</manifest>

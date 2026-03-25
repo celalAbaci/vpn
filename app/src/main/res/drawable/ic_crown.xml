@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Crown body — altın -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M12,76 L12,28 L34,55 L50,10 L66,55 L88,28 L88,76 Z" />
+
+    <!-- Crown body iç highlight — açık altın -->
+    <path
+        android:fillColor="#FFD54F"
+        android:fillAlpha="0.45"
+        android:pathData="M20,76 L20,40 L37,58 L50,22 L63,58 L80,40 L80,76 Z" />
+
+    <!-- Alt bant — koyu amber -->
+    <path
+        android:fillColor="#FF8F00"
+        android:pathData="M7,72 L93,72 L93,87 Q93,92 88,92 L12,92 Q7,92 7,87 Z" />
+
+    <!-- Bant üst çizgisi — orta altın -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M7,72 L93,72 L93,76 L7,76 Z" />
+
+    <!-- Merkez taş — yakut kırmızı -->
+    <path
+        android:fillColor="#C62828"
+        android:pathData="M50,10 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    <!-- Yakut highlight -->
+    <path
+        android:fillColor="#EF9A9A"
+        android:pathData="M46.5,6.5 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0" />
+
+    <!-- Sol tepe taşı — safir -->
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M12,28 m-5.5,0 a5.5,5.5 0 1,0 11,0 a5.5,5.5 0 1,0 -11,0" />
+    <!-- Safir highlight -->
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M9.5,25 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+
+    <!-- Sağ tepe taşı — safir -->
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M88,28 m-5.5,0 a5.5,5.5 0 1,0 11,0 a5.5,5.5 0 1,0 -11,0" />
+    <!-- Safir highlight -->
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M85.5,25 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+
+    <!-- Taban süs taşları — inci/altın -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M28,82 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0" />
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M50,82 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0" />
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M72,82 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0" />
+
+    <!-- Parıltı sol üst — 4 kollu yıldız -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.85"
+        android:pathData="M22,21 L23.3,24.7 L27,26 L23.3,27.3 L22,31 L20.7,27.3 L17,26 L20.7,24.7 Z" />
+
+    <!-- Parıltı sağ üst — küçük yıldız -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.6"
+        android:pathData="M76,16 L76.9,18.1 L79,19 L76.9,19.9 L76,22 L75.1,19.9 L73,19 L75.1,18.1 Z" />
+
+</vector>
