@@ -1,92 +1,198 @@
-# DataGuard VPN
+# DataGuard VPN — Android Uygulaması
 
-**DataGuard VPN**, Android cihazınız için güvenli ve hızlı bir VPN uygulamasıdır.
-OpenVPN ve VLESS/Reality protokollerini destekler.
-
-> ⚠️ **Beta Sürümü** — Uygulama test aşamasındadır. Geri bildirimlerinizi bekliyoruz.
+Android VPN istemcisi. OpenVPN, VLESS/Stealth ve Xray protokollerini destekler.
+Backend için ayrı repo: [superVPNProject](../superVPNProject)
 
 ---
 
-## İndirme
+## Gereksinimler
 
-En güncel APK dosyasını indirmek için:
-
-👉 **[Releases sayfasına git →](../../releases/latest)**
-
----
-
-## Android'e Nasıl Kurulur?
-
-### Adım 1 — Bilinmeyen Kaynaklara İzin Ver
-
-Play Store dışından APK yükleyebilmek için bu ayarı bir kez yapman gerekiyor.
-
-**Android 8 ve üzeri için:**
-1. **Ayarlar** → **Uygulamalar** bölümüne gir
-2. Sağ üstteki **⋮** menüsünden **Özel uygulama erişimi** seç
-3. **Bilinmeyen uygulamaları yükle** seçeneğine gir
-4. Kullandığın tarayıcıyı (Chrome, Firefox vb.) bul ve **İzin ver** seçeneğini aç
-
-> Farklı telefon markalarında bu menü farklı yerde olabilir:
-> - **Samsung:** Ayarlar → Biyometri ve Güvenlik → Bilinmeyen uygulamaları yükle
-> - **Xiaomi/MIUI:** Ayarlar → Ek Ayarlar → Gizlilik → Bilinmeyen kaynaklar
-> - **Huawei:** Ayarlar → Güvenlik → Bilinmeyen kaynaklar
+| Araç | Minimum Sürüm |
+|------|--------------|
+| Android Studio | Hedgehog (2023.1.1)+ |
+| JDK | 17 |
+| Android SDK | 35 |
+| Gradle | Wrapper üzerinden otomatik |
 
 ---
 
-### Adım 2 — APK'yı İndir
+## Kurulum
 
-1. Telefonunun tarayıcısında bu sayfayı aç
-2. Yukarıdaki **Releases** bağlantısına tıkla
-3. `DataGuardVPN-v*.apk` dosyasını indir
-4. İndirme tamamlandığında bildirime tıkla
+### 1. Projeyi klonla
 
----
+```bash
+git clone https://github.com/celalAbaci/vpn.git
+cd vpn
+```
 
-### Adım 3 — Yükle
+### 2. `local.properties` dosyasını oluştur
 
-1. İndirilen APK dosyasını aç (Dosyalar uygulamasından da bulabilirsin)
-2. **Yükle** butonuna bas
-3. Yükleme tamamlandığında **Aç** butonuna bas
+Proje kök dizininde (`SuperVPN_Proje/local.properties`) aşağıdaki içeriği oluştur. Bu dosya `.gitignore`'a eklidir, commit edilmez.
 
----
+```properties
+# Android SDK yolu (kendi bilgisayarına göre düzenle)
+sdk.dir=C\:\\Users\\KULLANICI_ADI\\AppData\\Local\\Android\\Sdk
 
-### Adım 4 — Kayıt Ol veya Giriş Yap
+# Release imzalama (release APK almak için gerekli)
+KEYSTORE_PATH=C:/path/to/your-keystore.jks
+KEYSTORE_PASSWORD=keystore_sifren
+KEY_ALIAS=alias_adin
+KEY_PASSWORD=key_sifren
+```
 
-1. Uygulamayı ilk açtığında kayıt ekranı gelir
-2. **Kullanıcı adı**, **e-posta** ve **şifre** girerek hesap oluştur
-3. Hesabın olduktan sonra giriş yap
-4. Ana ekranda **Bağlan** butonuna bas — VPN hazır!
+> **Not:** Release build almak istemiyorsan imzalama satırları boş bırakılabilir; debug build sorunsuz çalışır.
 
----
+### 3. Android Studio'da aç
 
-## Sıkça Sorulan Sorular
+```
+File → Open → SuperVPN_Proje klasörünü seç → OK
+```
 
-**APK güvenli mi?**
-Evet. APK dijital olarak imzalanmıştır ve uygulama açılırken imza doğrulaması yapılır. Değiştirilmiş bir APK açılmaz.
-
-**"Bu uygulama zararlı olabilir" uyarısı çıktı, ne yapmalıyım?**
-Bu uyarı Play Store dışından yüklenen tüm uygulamalarda çıkar. **Yine de yükle** seçeneğine basabilirsiniz — uygulama güvenlidir.
-
-**VPN bağlantısı kurulamıyor?**
-- İnternet bağlantınızı kontrol edin
-- Uygulamayı kapatıp yeniden açın
-- Farklı bir sunucu seçmeyi deneyin
-
-**"VPN izni" ekranı çıktı, ne yapmalıyım?**
-Android her VPN uygulaması için bu izni bir kez sorar. **Tamam/İzin ver** diyerek devam edin.
+Gradle sync otomatik başlar. Tüm bağımlılıklar indirilir.
 
 ---
 
-## Geri Bildirim
+## Build & Çalıştırma
 
-Sorun, öneri veya hata bildirimi için:
-👉 [Issues sayfası](../../issues) üzerinden bildirebilirsiniz.
+### Debug APK (geliştirme için)
+
+```bash
+./gradlew assembleDebug
+# Çıktı: app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Release APK (dağıtım için)
+
+`local.properties` içindeki keystore ayarları doldurulmuş olmalı.
+
+```bash
+./gradlew assembleRelease
+# Çıktı: app/build/outputs/apk/release/app-release.apk
+```
+
+### Bağlı cihaza / emülatöre yükle
+
+```bash
+./gradlew installDebug
+```
+
+### Testler
+
+```bash
+# Unit testler
+./gradlew test
+
+# Instrumented testler (cihaz/emülatör gerekli)
+./gradlew connectedAndroidTest
+```
 
 ---
 
-## Sürüm Geçmişi
+## APK Teknik Detayları
 
-| Sürüm | Tarih | Değişiklikler |
-|-------|-------|---------------|
-| v1.0.0 | 2025-03 | İlk beta sürüm |
+| Özellik | Değer |
+|---------|-------|
+| Application ID | `com.abacicelal.supervpn_project` |
+| Min SDK | 24 (Android 7.0 Nougat) |
+| Target SDK | 35 (Android 15) |
+| Version | 1.0 (code: 1) |
+| Java | 17 |
+| Desteklenen ABI (release) | `arm64-v8a`, `armeabi-v7a` |
+| Desteklenen ABI (debug) | + `x86_64` (emülatör) |
+
+---
+
+## Desteklenen VPN Protokolleri
+
+| Protokol | Servis | Açıklama |
+|----------|--------|----------|
+| OpenVPN | `OpenVPNService` | Gömülü ics-openvpn motoru |
+| VLESS/Stealth | `StealthVpnService` | libv2ray üzerinden Xray-core |
+| Xray | `XrayVpnService` | LibXray (Xray-core) direkt entegrasyon |
+
+Protokol seçimi `MainActivity`'de yapılır. `AUTO` modunda sunucu ping ve yüküne göre otomatik seçilir.
+
+---
+
+## Proje Yapısı
+
+```
+app/src/main/java/com/abacicelal/supervpn_project/
+├── core/
+│   ├── StealthVpnService.java    # VLESS/Stealth VPN servisi
+│   └── XrayVpnService.java       # Xray VPN servisi
+├── remote/
+│   ├── ApiService.java           # Retrofit endpoint tanımları
+│   ├── AuthInterceptor.java      # JWT token enjeksiyonu
+│   ├── RetrofitClient.java       # HTTP istemci yapılandırması
+│   ├── TokenAuthenticator.java   # Otomatik token yenileme
+│   └── model/                    # API request/response modelleri
+├── utils/
+│   └── DeviceIdManager.java      # Cihaz kimliği yönetimi
+├── util/
+│   └── LocaleManager.java        # Dil yönetimi
+├── BaseActivity.java             # Dil desteği için temel activity
+├── MainActivity.java             # VPN kontrol merkezi
+├── LoginActivity.java
+├── RegisterActivity.java
+├── SplashActivity.java
+├── ServerSelectionActivity.java
+├── PremiumActivity.java
+└── ...
+de/blinkt/openvpn/               # Gömülü OpenVPN kütüphanesi
+```
+
+---
+
+## İzinler (AndroidManifest.xml)
+
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+```
+
+---
+
+## Backend API
+
+Uygulama `BuildConfig.API_HOST` üzerinden backend'e bağlanır:
+
+- **Release:** `api.dataguardvpn.com`
+- **Debug:** `api.dataguardvpn.com`
+
+Farklı bir backend kullanmak için `app/build.gradle` içindeki `buildConfigField "String", "API_HOST"` satırını değiştir.
+
+**Kimlik Doğrulama:** JWT (24 saatlik access token + 7 günlük refresh token)
+
+---
+
+## Sık Karşılaşılan Sorunlar
+
+**Gradle sync başarısız:**
+```
+File → Invalidate Caches → Invalidate and Restart
+```
+
+**`local.properties` bulunamadı hatası:**
+Yukarıdaki [Kurulum → Adım 2](#2-localproperties-dosyasını-oluştur) adımını uygula.
+
+**Release build imzalama hatası:**
+`local.properties` içindeki keystore yolu ve şifrelerini kontrol et.
+
+**VPN bağlantısı kurulamıyor:**
+Backend sunucusunun çalışır durumda olduğunu ve API_HOST değerinin doğru ayarlandığını kontrol et.
+
+---
+
+## Backend Projesi Kurulumu
+
+Backend kurulumu için `superVPNProject/README.md` dosyasına bak.
+
+---
+
+## Lisans
+
+Özel kullanım. Tüm hakları saklıdır.
